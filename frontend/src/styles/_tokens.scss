@@ -1,0 +1,77 @@
+:root {
+  /* Color Palette - Arclight Inspired Mission-Grade Dark Console */
+  --bg-main: #0B0D10;
+  --bg-sidebar: #101318;
+  --bg-card: #14181E;
+  --bg-surface: #14181E;
+  --bg-surface-elevated: #191E25;
+  --bg-surface-hover: #1E242C;
+  --bg-input: #0F1216;
+
+  /* Borders */
+  --border-subtle: #1C222B;
+  --border-main: #292F38;
+  --border-focus: #C6A56A;
+  --border-gold-glow: rgba(198, 165, 106, 0.35);
+
+  /* Typography Colors */
+  --text-primary: #F1F0EB;
+  --text-secondary: #A0A6B0;
+  --text-muted: #727A86;
+  --text-gold: #C6A56A;
+  --text-gold-hover: #D9BA80;
+
+  /* Accent - Warm Gold & Amber */
+  --accent-gold: #C6A56A;
+  --accent-gold-hover: #D9BA80;
+  --accent-gold-subtle: rgba(198, 165, 106, 0.12);
+  --accent-gold-border: rgba(198, 165, 106, 0.3);
+  --gold-gradient: linear-gradient(135deg, #F4E2B2 0%, #E8B86A 50%, #C6A56A 100%);
+
+  /* Semantic Status Colors */
+  --status-success: #78B99A;
+  --status-success-bg: rgba(120, 185, 154, 0.12);
+  --status-success-border: rgba(120, 185, 154, 0.3);
+
+  --status-warning: #D8AC66;
+  --status-warning-bg: rgba(216, 172, 102, 0.12);
+  --status-warning-border: rgba(216, 172, 102, 0.3);
+
+  --status-error: #D77E7E;
+  --status-error-bg: rgba(215, 126, 126, 0.12);
+  --status-error-border: rgba(215, 126, 126, 0.3);
+
+  --status-info: #6BA8C6;
+  --status-info-bg: rgba(107, 168, 198, 0.12);
+  --status-info-border: rgba(107, 168, 198, 0.3);
+
+  /* Spacing Scale */
+  --space-2xs: 4px;
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+
+  /* Corner Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-elevated: 0 10px 30px -10px rgba(0, 0, 0, 0.7);
+  --shadow-gold: 0 0 20px rgba(198, 165, 106, 0.15);
+
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Layout */
+  --sidebar-width: 250px;
+  --topbar-height: 56px;
+}

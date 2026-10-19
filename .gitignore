@@ -1,0 +1,12 @@
+# Dependencies and build artifacts
+frontend/node_modules/
+frontend/.angular/
+frontend/dist/
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+
+# IDE and OS
+.idea/
+*.iml
+.DS_Store
+Thumbs.db

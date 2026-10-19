@@ -1,0 +1,1117 @@
+﻿Work autonomously on routine implementation decisions. Do not stop to ask permission for every file change, dependency choice, or ordinary technical decision. Follow the approved specification, run tests, diagnose errors, and fix them yourself. Ask me only when a decision has a meaningful security, data-loss, cost, or product-scope consequence. Never claim a feature is complete unless you have implemented and verified it.
+
+PROJECT IDENTITY AND OBJECTIVE
+You are acting as a senior full-stack engineering team consisting of a software architect, senior Angular developer, senior Java/Spring Boot developer, database engineer, UI/UX designer, QA engineer, accessibility specialist, and application security engineer.
+
+Your responsibility is to design, implement, test, and document a complete personal productivity web application for a working professional who also studies, develops technical skills, manages personal responsibilities, and works toward long-term career goals.
+
+This is a real application, not a prototype, static design, or portfolio mockup.
+
+The application must let me manage daily tasks, notes, deadlines, calendar events, email reminders, learning roadmaps, habits, focus sessions, goals, and productivity reports from one place.
+
+The product must feel like professionally engineered software created by an experienced product development team. Every screen, interaction, database operation, and workflow must have a clear purpose.
+Primary product goals
+1. Help me organize professional, educational, and personal responsibilities.
+2. Help me decide what to do next based on urgency, importance, and available time.
+3. Help me study consistently and measure actual learning progress.
+4. Prevent missed deadlines through reliable reminders.
+5. Make it easy to capture notes and ideas before I forget them.
+6. Prevent unfinished tasks from accumulating endlessly.
+7. Provide useful insights into my time, workload, and progress.
+8. Run without paid software subscriptions or mandatory external AI services.
+1. REFERENCE DESIGN AND VISUAL DIRECTION
+Use this website as the primary design reference:
+
+https://saddlebrown-dolphin-922420.hostingersite.com/
+
+The reference website is called Arclight. Before implementing the interface, open the website in the browser and inspect its actual visual appearance at desktop and mobile widths. Study its layout, typography, spacing, backgrounds, borders, dashboard composition, visual hierarchy, and interactions.
+
+Do not rely exclusively on the written description of the website. Inspect the actual rendered reference.
+1.1 Design language
+Adapt the reference's premium, dark, operations-console aesthetic to a personal productivity application.
+
+The resulting product should have:
+- A deep charcoal or near-black foundation.
+- Restrained warm gold or amber accents for selected navigation, primary actions, and meaningful highlights.
+- Subtle, low-contrast borders separating panels.
+- Clear typography with strong readability.
+- Dense but well-organized information layouts.
+- Compact metric cards and carefully aligned data.
+- Sophisticated tables, calendar views, task lists, and progress indicators.
+- Precise spacing, consistent corner radii, and predictable component sizes.
+- Subtle hover, focus, and state-transition effects.
+- A deliberate balance between information density and empty space.
+Use the reference as inspiration, not as a literal clone. Do not reuse its brand name, logo, copy, fake company metrics, or unrelated operations-console functionality.
+1.2 Suggested design tokens
+Create a centralized design system with reusable CSS variables or SCSS tokens. Start with these values and refine them after inspecting the reference.
+Token	Starting value
+Main background	#0B0D10
+Sidebar background	#101318
+Card background	#14181E
+Elevated surface	#191E25
+Main border	#292F38
+Primary text	#F1F0EB
+Secondary text	#A0A6B0
+Muted text	#727A86
+Gold accent	#C6A56A
+Gold hover	#D9BA80
+Success	#78B99A
+Warning	#D8AC66
+Error	#D77E7E
+These are initial design tokens, not mandatory final colors. Adjust them if the reference indicates a better match.
+
+Use gold selectively. Do not make every button, icon, border, and progress bar gold.
+
+Status colors must remain distinguishable without relying on color alone.
+1.3 Typography and iconography
+- Use a restrained, professional typeface. Prefer a locally available system font or a free font with appropriate licensing.
+- Use consistent font sizes, line heights, weights, and letter spacing.
+- Use a consistent icon family such as Lucide Icons.
+- Use icons only where they improve recognition or navigation.
+- Do not use emojis as substitutes for interface icons.
+- Avoid oversized typography in operational screens.
+- Use tabular numerals for dates, timers, and numerical metrics where appropriate.
+1.4 Avoid the generic AI-generated appearance
+Do not produce the usual generic AI dashboard with a gradient hero, excessive rounded cards, decorative glowing orbs, glassmorphism everywhere, floating blobs, or meaningless charts.
+
+Specifically:
+- Do not place every element inside a separate card.
+- Do not use gradients as a substitute for visual design.
+- Do not create fake real-time data or fake activity feeds.
+- Do not use excessive animation.
+- Do not add decorative charts without a real user benefit.
+- Do not use random illustrations that do not belong to the product.
+- Do not fill empty space with invented metrics or testimonials.
+- Do not use generic labels such as "Unlock your potential" or "Your AI-powered journey."
+- Do not display AI-generated suggestions as if they were factual data.
+- Do not make every screen look identical just because the same card component is reused.
+Use precise alignment, intentional hierarchy, carefully chosen typography, consistent interaction patterns, and realistic content to achieve the desired quality.
+1.5 Responsive behavior
+Design primarily for desktop because I will use the application after work and during study sessions on my computer.
+
+Also support tablets and mobile devices.
+- Desktop: persistent sidebar and multi-column workspace.
+- Tablet: collapsible sidebar and flexible panels.
+- Mobile: compact navigation, stacked content, touch-friendly controls, and usable calendar views.
+- Prevent horizontal overflow.
+- Ensure dialogs, forms, menus, and date pickers remain usable on smaller screens.
+2. SOFTWARE AND TECHNOLOGY REQUIREMENTS
+Use only free tools and open-source libraries for development and personal operation.
+
+Do not purchase hosting, domains, APIs, subscriptions, premium component libraries, or AI services.
+2.1 Frontend
+Technology: Angular with TypeScript and SCSS.
+
+Use a currently supported stable Angular version compatible with the installed Node.js version. Prefer Angular's standalone component architecture, typed forms, Angular Router, and a consistent application structure. Refer to the official Angular documentation. 
+
+Google Codelabs
++1
+
+
+
+
+Use:
+- Angular CLI for project generation and builds.
+- TypeScript strict mode.
+- Angular Router for page navigation.
+- Reactive Forms for validated forms.
+- Angular services for API communication and reusable business logic.
+- RxJS for asynchronous operations.
+- SCSS and custom design tokens for styling.
+- Lucide Angular or another suitable free icon package.
+- A free, appropriately licensed calendar library or a custom Angular calendar implementation.
+- A lightweight chart library only if its features genuinely improve reporting.
+Avoid unnecessary state-management libraries. Start with Angular services and signals or RxJS where appropriate.
+2.2 Backend
+Technology: Java and Spring Boot.
+
+Use a currently supported Java LTS version compatible with the selected Spring Boot release.
+
+Use:
+- Spring Boot Web.
+- Spring Security.
+- Spring Data JPA.
+- PostgreSQL JDBC driver.
+- Jakarta Bean Validation.
+- Spring Mail for email delivery.
+- Spring Scheduling for basic reminder scheduling.
+- Flyway for database schema migrations.
+- Maven for build and dependency management.
+- JUnit 5 and Mockito for testing.
+- Spring Boot Actuator for appropriate local health checks.
+Keep business logic out of controllers. Controllers should validate requests, delegate to service classes, and return appropriate HTTP responses.
+2.3 Database
+Technology: PostgreSQL, running locally.
+
+Use PostgreSQL for persistent application data.
+
+Use:
+- Flyway migrations to create and evolve the schema.
+- Foreign keys and appropriate unique constraints.
+- Database indexes for frequent queries.
+- Transactions for operations that must succeed or fail together.
+- timestamptz for timestamps representing actual instants.
+- date for date-only concepts such as all-day events and scheduled learning days.
+Do not use in-memory data as the permanent storage layer.
+2.4 Free development software
+Install the following:
+Software	Purpose
+JDK	Compile and run Java
+Node.js LTS and npm	Run Angular tooling
+Angular CLI	Generate and build the frontend
+PostgreSQL	Store application data
+pgAdmin 	Inspect and manage the database
+Git	Version control
+
+Do not introduce paid development tools as requirements.
+2.5 Runtime architecture
+Use this local development arrangement:
+- Angular frontend: http://localhost:4201
+- Spring Boot backend: http://localhost:8081
+- PostgreSQL: localhost:5432
+- API prefix: /api/v1
+Configure Angular to communicate with Spring Boot through a development proxy where practical.
+
+Configure CORS explicitly if needed. Do not use wildcard origins with credentials.
+
+The application must work on my own computer without requiring a public server.
+
+Do not assume that local hosting provides remote access or sends reminders while the computer is switched off.
+3. APPLICATION ARCHITECTURE AND PROJECT STRUCTURE
+Use a maintainable modular monolith. Microservices are unnecessary for a personal application and would add deployment and debugging overhead.
+
+Organize the backend by business feature, with clear separation between controllers, services, repositories, entities, DTOs, validation, and configuration.
+
+Suggested backend structure:
+backend/
+  src/main/java/.../
+    config/
+    security/
+    auth/
+    dashboard/
+    tasks/
+    notes/
+    calendar/
+    reminders/
+    learning/
+    habits/
+    focus/
+    goals/
+    analytics/
+    common/
+  src/main/resources/
+    application.yml
+    db/migration/
+  src/test/
+  pom.xml
+
+
+Suggested frontend structure:
+frontend/
+  src/app/
+    core/
+      auth/
+      guards/
+      interceptors/
+      services/
+    shared/
+      components/
+      pipes/
+      utilities/
+    layout/
+      sidebar/
+      topbar/
+      command-palette/
+    features/
+      dashboard/
+      tasks/
+      calendar/
+      notes/
+      learning/
+      habits/
+      focus/
+      goals/
+      insights/
+      settings/
+    app.routes.ts
+  src/styles/
+    _tokens.scss
+    _typography.scss
+    _utilities.scss
+    styles.scss
+  package.json
+
+
+Adapt the exact structure to the generated Angular project rather than forcing outdated Angular conventions.
+
+Follow these engineering principles:
+1. Use descriptive names.
+2. Keep components small and focused.
+3. Reuse components when behavior and presentation genuinely match.
+4. Avoid oversized service classes.
+5. Avoid duplicated business logic.
+6. Use typed DTOs and API contracts.
+7. Centralize error handling and validation.
+8. Keep configuration outside source code.
+9. Avoid unnecessary dependencies.
+10. Write meaningful tests.
+Do not generate every module as a large block of code before validating the architecture. Build incrementally.
+4. AUTHENTICATION AND USER PROFILE
+Even though I initially intend to use the application alone, implement a simple, secure personal account model so the architecture remains consistent.
+4.1 Authentication
+Implement:
+- Registration with email and password.
+- Login and logout.
+- Password hashing using a suitable password encoder.
+- Input validation.
+- Session expiration.
+- Protected application routes.
+- A user profile page.
+- Password change functionality.
+- Account deletion with confirmation.
+Prefer a secure server-managed session with an HTTP-only cookie for this same-origin local application. Configure Secure appropriately for the deployment environment, use suitable SameSite settings, and protect state-changing requests against CSRF.
+
+If a different authentication approach is chosen, document the security trade-offs. Do not store sensitive authentication tokens in local storage.
+4.2 Personal settings
+Allow configuration of:
+- Display name.
+- Email address.
+- Time zone.
+- Preferred first day of the week.
+- Working hours.
+- Typical commute duration.
+- Available weekday and weekend study hours.
+- Default task duration.
+- Daily agenda reminder time.
+- Email reminder preferences.
+- Theme preferences.
+- Week-start and date-format preferences.
+The application must not assume every day has the same availability.
+4.3 Privacy
+Every user-owned resource must be associated with the authenticated user.
+
+All repository queries and service operations must enforce ownership. Knowing another task's ID must never grant access to it.
+
+Never expose passwords, SMTP credentials, session secrets, or other private configuration through APIs or browser logs.
+5. TASK MANAGEMENT MODULE
+This is one of the most important modules. Implement it fully before starting advanced features.
+5.1 Creating a task
+Provide a quick-add interface and a complete task form.
+
+Each task must support:
+- Title, required.
+- Description.
+- Rich text or Markdown notes where useful.
+- Status.
+- Priority.
+- Category.
+- Tags.
+- Planned date.
+- Optional scheduled start and end time.
+- Deadline.
+- Estimated duration.
+- Optional recurrence.
+- Optional associated goal.
+- Optional associated learning module.
+- Creation and update timestamps.
+- Completion timestamp.
+- Optional subtasks.
+Keep task scheduling and task deadlines as separate concepts.
+
+A task may be planned for one day but have a later deadline.
+5.2 Status management
+Implement the following statuses:
+- To Do.
+- In Progress.
+- Blocked.
+- Completed.
+Provide a clean status selector and a Kanban board with drag-and-drop status changes.
+
+When a task is marked Completed:
+1. Record the completion timestamp.
+2. Remove it from the default active-task view.
+3. Preserve it in task history and analytics.
+4. Cancel or suppress unnecessary future reminders for that task.
+5. Update related progress indicators.
+If a completed task is reopened, preserve its history and update its status consistently.
+5.3 Priority and categories
+Use Low, Medium, High, and Urgent priorities.
+
+Support editable categories such as:
+- Work.
+- Learning.
+- Personal.
+- Career.
+- Health and routine.
+- Projects.
+Allow the user to create and rename categories and assign colors using a consistent restrained palette.
+5.4 Task views
+Provide:
+- All tasks.
+- Today's tasks.
+- Upcoming tasks.
+- Overdue tasks.
+- Completed tasks.
+- Kanban board.
+- Tasks grouped by category.
+- Tasks grouped by priority.
+- Tasks associated with a particular goal.
+Allow filtering by status, priority, category, tag, date, and search term.
+
+Provide sorting by due date, planned date, priority, creation date, and estimated duration.
+5.5 Subtasks and dependencies
+Allow a task to contain subtasks with their own titles, statuses, and optional durations.
+
+Display a progress indicator for completed subtasks.
+
+For task dependencies, allow a task to depend on another task. Clearly indicate when a prerequisite is unfinished.
+
+Prevent dependency cycles and explain when a task is blocked.
+5.6 Recurring tasks
+Support daily, weekly, selected weekdays, monthly, and custom recurring patterns where practical.
+
+Examples include daily coding practice, weekly revision, and recurring personal responsibilities.
+
+Each recurrence must produce a distinct task occurrence or equivalent well-defined occurrence record. Completing today's occurrence must not accidentally complete all future occurrences.
+
+Allow editing either the current occurrence or the entire series.
+5.7 Task search and quick capture
+Implement:
+- Global task search.
+- Keyboard shortcut to open quick capture.
+- Fast creation with minimal required fields.
+- Optional parsing of simple natural-language dates, such as "Study Java tomorrow."
+Natural-language parsing must not silently invent a deadline or overwrite explicit data. If the date is ambiguous, ask the user to confirm it.
+5.8 Acceptance criteria
+I must be able to create, edit, complete, reopen, search, filter, sort, and reschedule tasks. All changes must persist after a page refresh and application restart.
+6. DASHBOARD AND TODAY'S TASKS
+The dashboard is the main entry point after login.
+
+Do not create a marketing homepage in place of the working dashboard.
+6.1 Dashboard layout
+Include:
+1. A compact date and greeting section.
+2. A quick-add task action.
+3. Today's planned tasks.
+4. Overdue tasks requiring attention.
+5. Upcoming deadlines.
+6. Tasks currently in progress.
+7. Today's planned versus available time.
+8. Learning progress for the week.
+9. Active goals and milestones.
+10. A small upcoming-calendar section.
+11. A shortcut to the daily review.
+Avoid displaying all these elements at equal visual importance. The next actionable task and today's priorities should be prominent.
+6.2 Today's task logic
+Include a task in today's planned list when its planned date matches the user's local current date, subject to its status and visibility settings.
+
+Overdue tasks should appear in a separate section rather than silently disappearing.
+
+Tasks with deadlines today but scheduled on a different date must also be visible in a relevant deadline section.
+
+Display an empty state with a useful action when no tasks are scheduled.
+
+Do not insert fake sample tasks into the actual user's dashboard after setup.
+6.3 Workload indicator
+Calculate:
+- Total estimated time for today's active tasks.
+- Available time based on user-defined availability.
+- Remaining planned capacity.
+- Estimated overload when scheduled work exceeds availability.
+Clearly distinguish estimated workload from actual tracked time.
+
+Do not claim that a user will finish a task by a certain time unless the scheduling logic supports that conclusion.
+7. CALENDAR AND SCHEDULING
+Create a functional calendar with Month, Week, and Day views.
+7.1 Calendar requirements
+- Display scheduled tasks on their planned dates.
+- Display deadlines clearly.
+- Distinguish all-day items from timed tasks.
+- Use restrained category and status indicators.
+- Allow clicking a calendar item to open its details.
+- Allow creating tasks by selecting a date.
+- Allow rescheduling through drag-and-drop if supported reliably.
+- Support previous, next, and today navigation.
+- Support recurring tasks.
+- Display overdue items without misleading them as future events.
+7.2 Date and time handling
+Use the user's configured time zone for displaying dates and times.
+
+Store actual timestamps consistently in the backend and handle conversions explicitly.
+
+Avoid off-by-one errors when moving between dates and time zones.
+
+All-day dates must not shift to the previous or following day because of UTC conversion.
+7.3 Calendar integration
+Do not require a paid external calendar API for the MVP.
+
+Implement an internal calendar first. Optional iCalendar import/export can be considered later if it can be done with free libraries and without paid services.
+8. NOTES AND PERSONAL KNOWLEDGE LIBRARY
+Create a searchable workspace for meeting notes, technical notes, study summaries, project ideas, and saved resources.
+8.1 Notes
+Each note should support:
+- Title.
+- Markdown or a simple rich text editor.
+- Tags.
+- Category.
+- Created and updated timestamps.
+- Optional pinning.
+- Optional links to tasks.
+- Optional links to learning modules and goals.
+8.2 Knowledge library
+Allow saving:
+- Useful URLs.
+- Documentation links.
+- Articles.
+- Code snippets.
+- Interview questions.
+- Course resources.
+- Personal learning summaries.
+Store the title, URL, description, tags, and related learning topic.
+
+Do not fetch external web pages automatically unless the user explicitly requests it.
+8.3 Search
+Implement full-text or well-indexed search across note titles, content, tags, and saved resource titles.
+
+Provide filters and a useful empty state.
+
+Notes must remain private to their owner.
+9. LEARNING AND UPSKILLING MODULE
+Build this module for someone balancing a full-time job with ongoing technical learning.
+9.1 Learning roadmaps
+Allow creation of a learning roadmap with:
+- Skill name.
+- Learning objective.
+- Start date.
+- Target completion date.
+- Weekly time target.
+- Modules.
+- Topics and subtopics.
+- Learning resources.
+- Practice exercises.
+- Revision dates.
+- Milestones.
+- Completion status.
+Examples include Java, Spring Boot, Angular, system design, databases, AI/ML, and interview preparation.
+
+These are examples, not hard-coded mandatory skills.
+9.2 Module and topic tracking
+Each roadmap module should contain actionable learning units.
+
+Track:
+- Not Started.
+- In Progress.
+- Completed.
+- Needs Revision.
+Allow notes and resources to be attached to a topic.
+
+A completed topic should not automatically mean that the user has mastered the skill. Track practice and revision separately.
+9.3 Revision scheduler
+Allow the user to schedule revision after completing a learning topic.
+
+Support configurable revision intervals, such as the next day, several days later, and one week later.
+
+Allow custom intervals and manual rescheduling.
+
+Do not claim that a particular revision algorithm guarantees memory retention.
+9.4 Practice and projects
+Allow logging:
+- Coding problems solved.
+- Concepts revised.
+- Projects completed.
+- Hours spent practicing.
+- Notes on mistakes.
+- Next steps.
+Provide a weekly view of learning effort and roadmap progress.
+9.5 Learning acceptance criteria
+I should be able to create a roadmap, add modules and topics, schedule learning sessions, complete them, attach notes and resources, and review my progress without manually editing database records.
+10. GOALS AND MILESTONES
+Create a dedicated goals module.
+
+Each goal should contain:
+- Name.
+- Description.
+- Goal category.
+- Target date.
+- Status.
+- Progress measure.
+- Milestones.
+- Linked tasks.
+- Optional linked learning roadmap.
+- Review notes.
+Examples include completing a certification, building a portfolio project, finishing a learning roadmap, or establishing a consistent study routine.
+
+Calculate progress from real completed milestones or explicitly defined measurable targets.
+
+Do not invent percentages for goals that have no measurable progress definition.
+
+Show goals that are on track, approaching their deadlines, or overdue based on clear rules.
+11. HABITS AND RECURRING ROUTINES
+Provide a lightweight habit tracker for routines that benefit from consistency.
+
+Support:
+- Habit name and description.
+- Schedule and frequency.
+- Daily completion.
+- Optional target duration.
+- Completion history.
+- Weekly and monthly views.
+- Streaks where meaningful.
+- Paused or archived habits.
+Allow users to miss a day without losing their historical data.
+
+Avoid manipulative streak mechanics, shame-based messages, or aggressive notifications.
+
+Habits should complement tasks rather than duplicate every recurring task.
+12. FOCUS TIMER AND TIME TRACKING
+Implement a focus timer for studying and task execution.
+12.1 Timer
+Support:
+- Configurable focus duration.
+- Short breaks.
+- Long breaks.
+- Start, pause, resume, and stop.
+- Optional Pomodoro-style sessions.
+- Link to a task or learning module.
+- Manual time entry.
+Use sensible defaults, but allow customization.
+12.2 Time logs
+Record:
+- Task or learning module.
+- Start time.
+- End time.
+- Duration.
+- Optional session notes.
+Prevent duplicate or invalid session records.
+
+If the application reloads during a running session, recover the timer state safely using persisted timestamps rather than relying exclusively on an in-memory interval.
+12.3 Insights
+Compare estimated and actual durations.
+
+Provide simple weekly summaries of work, learning, and personal activities.
+
+Do not track applications, browser activity, keystrokes, or other private behavior.
+13. DAILY REVIEW AND TASK CARRY-FORWARD
+Create an end-of-day review workflow.
+
+At the end of the day, display:
+- Completed tasks.
+- Unfinished tasks.
+- Missed deadlines.
+- Time tracked.
+- Learning completed.
+- Goals progressed.
+- Optional reflection notes.
+For each unfinished task, allow the user to:
+1. Reschedule it.
+2. Keep it in the backlog.
+3. Mark it blocked.
+4. Break it into smaller subtasks.
+5. Cancel or archive it if no longer relevant.
+Do not automatically copy all unfinished tasks to tomorrow.
+
+Allow the user to set a preferred review time or perform the review manually.
+
+Save the review as a historical record.
+14. EMAIL REMINDERS AND NOTIFICATIONS
+This feature must work without a paid notification provider.
+
+Use Spring Mail with a configurable SMTP transport. For the initial personal setup, support Gmail SMTP if the account allows it.
+14.1 Notification types
+Support:
+- Upcoming task deadline.
+- Task scheduled for today.
+- Overdue task reminder.
+- Daily morning agenda.
+- End-of-day review reminder.
+- Upcoming learning session.
+- Goal or milestone deadline.
+- Optional weekly productivity summary.
+Allow each notification type to be enabled or disabled.
+14.2 Reminder configuration
+Allow users to configure:
+- Recipient email.
+- Reminder lead time.
+- Preferred delivery time.
+- Notification frequency.
+- Quiet hours.
+- Daily summary settings.
+Do not send a reminder when a task has been completed, cancelled, or otherwise made ineligible for the reminder.
+14.3 Reliability
+Implement a persistent reminder queue or equivalent database-backed scheduling mechanism.
+
+Track:
+- Scheduled delivery time.
+- Notification type.
+- Related resource.
+- Delivery status.
+- Attempt count.
+- Last error.
+- Successful delivery timestamp.
+Use idempotency rules to prevent duplicate emails.
+
+Retry transient failures with bounded backoff. Do not retry permanent failures indefinitely.
+
+If the application restarts, it must recover pending reminders from the database.
+
+If the computer is off when a reminder is due, process overdue pending reminders after the application starts again, subject to configurable expiration rules.
+14.4 Gmail configuration
+Provide documented environment variables for SMTP host, port, username, password, sender address, and TLS settings.
+
+For Gmail, document app passwords where supported. Never request the user's regular Gmail password or store credentials in frontend code.
+
+Create an email configuration test that sends a test email only after the user explicitly requests it.
+
+Do not expose SMTP credentials through an API or logs.
+14.5 Honest operational limitations
+Clearly document that local-only scheduling requires the computer and backend to be running for timely email delivery.
+
+A free local application cannot guarantee background delivery while the device is powered off. Do not pretend otherwise.
+15. SMART DAILY PLANNING
+Implement rule-based planning before adding any optional AI integration.
+
+The planner should consider:
+- User-defined working hours.
+- Commute and personal commitments.
+- Available study time.
+- Task duration estimates.
+- Task priority.
+- Due dates.
+- Task dependencies.
+- Scheduled calendar events.
+- User-defined quiet periods.
+15.1 Planning behavior
+When the user requests planning suggestions:
+1. Retrieve the user's active tasks and relevant deadlines.
+2. Calculate available time.
+3. Identify urgent tasks and overdue work.
+4. Identify tasks blocked by prerequisites.
+5. Estimate total required time.
+6. Detect workload exceeding availability.
+7. Suggest a reasonable order or rescheduling plan.
+8. Explain why each suggestion was made.
+9. Let the user accept or reject each proposed change.
+Do not silently reschedule tasks or alter deadlines.
+
+Do not treat all free time as productive time. Respect user-defined breaks and availability.
+15.2 Natural-language quick entry
+Allow simple entries such as:
+
+"Study Spring Boot tomorrow for 45 minutes."
+
+Initially support predictable formats and date parsing with a free library or carefully tested rules.
+
+Show the interpreted title, date, and duration before saving if the interpretation is uncertain.
+
+Do not make an external AI API mandatory.
+16. WORKLOAD AND PRODUCTIVITY INSIGHTS
+Create a reporting module based on real persisted data.
+
+Include:
+- Tasks planned versus completed.
+- Completion rate over a selected period.
+- Overdue task count.
+- Estimated versus actual time.
+- Time by category.
+- Learning hours by skill.
+- Revision completion.
+- Goal milestone progress.
+- Habit completion history.
+- Tasks repeatedly rescheduled.
+Allow filtering by date range and category.
+
+Explain the calculation used for each metric.
+
+Avoid misleading metrics, vanity scores, or fabricated data.
+
+For example, define completion rate using a consistent population of tasks rather than mixing recurring occurrences, archived tasks, and newly created tasks indiscriminately.
+
+Include empty states when insufficient data exists.
+17. GLOBAL NAVIGATION AND COMMAND PALETTE
+Build a persistent application shell.
+
+Suggested navigation:
+- Dashboard.
+- Tasks.
+- Calendar.
+- Notes.
+- Learning.
+- Habits.
+- Focus.
+- Goals.
+- Insights.
+- Settings.
+17.1 Command palette
+Provide a keyboard-accessible command palette, inspired by the reference site's command-oriented interface.
+
+It should support:
+- Navigation to application pages.
+- Creating a task.
+- Creating a note.
+- Starting a focus session.
+- Opening today's calendar.
+- Searching tasks.
+- Opening settings.
+Use an appropriate keyboard shortcut and avoid intercepting normal typing in form fields.
+
+Show available commands clearly. Do not display fake command results or implement commands that do nothing.
+17.2 Global quick capture
+Provide an always-accessible way to capture a task or note.
+
+Make the default action fast. Advanced fields can be completed later.
+18. DATABASE DESIGN
+Design the relational schema before implementing feature-specific endpoints.
+
+At minimum, evaluate the need for the following entities:
+- users
+- user_settings
+- categories
+- tags
+- tasks
+- task_tags
+- subtasks or a self-referencing task relationship
+- task_dependencies
+- recurrence_rules
+- task_occurrences, if required by the recurrence design
+- notes
+- note_tags
+- saved_resources
+- calendar_events, if separate from tasks
+- reminders
+- notification_preferences
+- notification_deliveries
+- learning_roadmaps
+- learning_modules
+- learning_topics
+- learning_resources
+- revision_sessions
+- practice_logs
+- goals
+- goal_milestones
+- goal_task_links, if required
+- habits
+- habit_entries
+- focus_sessions
+- time_logs
+- daily_reviews
+Avoid creating unnecessary tables if a simpler normalized design adequately meets the requirements.
+Database requirements
+1. Define primary and foreign keys.
+2. Add ownership relationships.
+3. Add appropriate indexes.
+4. Use explicit deletion rules.
+5. Prevent duplicate records where necessary.
+6. Validate relationships at the service layer and database layer where appropriate.
+7. Use migrations for every schema change.
+8. Preserve historical records where needed for reporting.
+9. Avoid storing derived values that can be calculated reliably unless caching is justified.
+10. Document important design decisions.
+Use UUIDs or another consistent identifier strategy.
+
+Do not use raw SQL assembled from user input.
+19. REST API DESIGN
+Create a documented API with consistent naming, pagination where appropriate, validation, and predictable response formats.
+
+Suggested endpoints include:
+/api/v1/auth/register
+/api/v1/auth/login
+/api/v1/auth/logout
+/api/v1/auth/me
+
+/api/v1/tasks
+/api/v1/tasks/{id}
+/api/v1/tasks/{id}/status
+/api/v1/tasks/{id}/subtasks
+/api/v1/tasks/{id}/dependencies
+
+/api/v1/dashboard/today
+/api/v1/dashboard/upcoming
+
+/api/v1/calendar/events
+/api/v1/calendar/tasks
+
+/api/v1/notes
+/api/v1/notes/{id}
+/api/v1/resources
+
+/api/v1/learning/roadmaps
+/api/v1/learning/modules
+/api/v1/learning/topics
+/api/v1/learning/revisions
+/api/v1/learning/practice-logs
+
+/api/v1/goals
+/api/v1/goals/{id}/milestones
+
+/api/v1/habits
+/api/v1/habits/{id}/entries
+
+/api/v1/focus-sessions
+/api/v1/time-logs
+
+/api/v1/reminders
+/api/v1/notifications/preferences
+/api/v1/notifications/test-email
+
+/api/v1/reviews
+/api/v1/analytics/summary
+/api/v1/settings
+
+
+These are starting examples. Refine the API according to the implemented domain model.
+
+Use appropriate HTTP methods and status codes.
+
+Return meaningful validation errors. Do not expose stack traces, SQL details, internal configuration, or sensitive information.
+
+Add OpenAPI documentation using a free library if useful.
+20. SECURITY, PRIVACY, AND DATA SAFETY
+Security is required even for a single-user application.
+
+Implement:
+- Secure password hashing.
+- Authentication and authorization.
+- CSRF protection where applicable.
+- Input validation.
+- Ownership checks.
+- Safe error responses.
+- Secure cookie settings.
+- Rate limiting or reasonable login-attempt protection.
+- Secret management through environment variables or local configuration outside version control.
+- Protection against SQL injection.
+- Safe rendering of note content.
+- Database backups and a documented restore process.
+Do not expose the development database or backend directly to the public internet.
+
+Do not commit real credentials to Git.
+
+Do not log complete private notes, passwords, SMTP credentials, or sensitive request bodies.
+
+If multiple accounts are supported, verify that one user cannot read, edit, or delete another user's records.
+21. TESTING AND QUALITY ASSURANCE
+Treat testing as part of every phase rather than postponing it until the end.
+Backend testing
+Write unit and integration tests for:
+- Authentication.
+- Task creation and updates.
+- Task ownership.
+- Status transitions.
+- Due-date and time-zone handling.
+- Recurring task generation.
+- Reminder eligibility.
+- Duplicate reminder prevention.
+- Retry behavior.
+- Learning progress.
+- Goal calculations.
+- Time logging.
+- Daily review behavior.
+- API validation.
+- Database migrations.
+Use JUnit 5, Mockito, and Spring Boot test support.
+Frontend testing
+Test:
+- Form validation.
+- Task status changes.
+- Calendar navigation.
+- Date selection.
+- Search and filters.
+- Loading states.
+- Empty states.
+- Error states.
+- Responsive layouts.
+- Keyboard navigation.
+- Dialogs and confirmations.
+- Dashboard calculations.
+End-to-end testing
+Use a free browser-testing tool such as Playwright if practical.
+
+At minimum, verify these complete workflows:
+1. Register and log in.
+2. Create a task.
+3. Add a note.
+4. Schedule the task in the calendar.
+5. Change its status to In Progress.
+6. Complete the task.
+7. Verify persistence after refresh.
+8. Create a learning roadmap.
+9. Complete a learning topic.
+10. Configure a reminder and verify the email delivery workflow.
+11. Review unfinished tasks at the end of the day.
+12. Confirm that unauthorized users cannot access private resources.
+Do not declare the application complete simply because it compiles.
+22. DEVELOPMENT PHASES AND IMPLEMENTATION ORDER
+Build the application in the following phases. Finish and validate each phase before expanding the scope.
+Phase 0: Inspect, plan, and establish the design system
+Tasks:
+1. Inspect the reference website.
+2. Document its visual style and identify the elements worth adapting.
+3. Check the installed software and available runtime versions.
+4. Confirm that all selected dependencies are free and compatible.
+5. Define the application architecture.
+6. Create the database ER diagram.
+7. Define initial API contracts.
+8. Establish the color palette, typography, spacing, component styles, and responsive rules.
+9. Initialize Git and create a working project structure.
+Deliverables:
+- Architecture document.
+- Database design.
+- Initial API specification.
+- Design tokens.
+- Running Angular and Spring Boot skeletons.
+- A working PostgreSQL connection.
+Acceptance criterion: Both frontend and backend start locally, connect as intended, and provide a basic health check.
+Phase 1: Application shell and authentication
+Implement:
+1. Main layout.
+2. Sidebar and topbar.
+3. Responsive navigation.
+4. Login and registration.
+5. Authentication and session handling.
+6. Profile and settings foundation.
+7. Reusable buttons, fields, dialogs, tables, badges, and notifications.
+8. Global loading, error, and empty states.
+Acceptance criterion: I can register, log in, navigate between protected pages, refresh without losing the authenticated session, and log out correctly.
+Phase 2: Tasks and today's dashboard
+Implement:
+1. Task CRUD.
+2. Task notes and categories.
+3. Priority and status management.
+4. Planned dates and deadlines.
+5. Task search, filters, and sorting.
+6. Subtasks.
+7. Today's dashboard.
+8. Overdue and upcoming sections.
+9. Workload calculation.
+10. Persistence and automated tests.
+Acceptance criterion: The task manager is fully usable, and dashboard figures reflect real database data.
+Phase 3: Calendar and recurring tasks
+Implement:
+1. Monthly, weekly, and daily calendar.
+2. Task creation from a date.
+3. Task details from calendar events.
+4. Rescheduling.
+5. Recurring schedules.
+6. Task dependencies.
+7. Time-zone correctness.
+8. Calendar tests.
+Acceptance criterion: Calendar events match task records and remain consistent after rescheduling, recurrence, and completion.
+Phase 4: Notes and knowledge library
+Implement:
+1. Note creation and editing.
+2. Markdown or equivalent editor.
+3. Tags and categories.
+4. Task-linked notes.
+5. Saved resources and links.
+6. Search and filtering.
+7. Persistence and tests.
+Acceptance criterion: I can retrieve relevant notes and resources without manually browsing every item.
+Phase 5: Email reminders
+Implement:
+1. SMTP configuration.
+2. Notification preferences.
+3. Reminder scheduling.
+4. Persistent reminder records.
+5. Delivery history.
+6. Retry handling.
+7. Duplicate prevention.
+8. Daily agenda emails.
+9. Overdue reminders.
+10. Test-email workflow.
+Acceptance criterion: A test reminder can be scheduled, delivered, recorded, and prevented from sending again unnecessarily.
+Phase 6: Learning and career development
+Implement:
+1. Learning roadmaps.
+2. Modules and topics.
+3. Learning resources.
+4. Progress tracking.
+5. Revision scheduling.
+6. Practice logs.
+7. Learning-hour targets.
+8. Weekly learning summaries.
+Acceptance criterion: I can plan a skill roadmap and measure actual progress over time.
+Phase 7: Goals, habits, and focus
+Implement:
+1. Goals and milestones.
+2. Linked tasks.
+3. Habit schedules and completion history.
+4. Focus timer.
+5. Persisted time logs.
+6. Estimated-versus-actual duration reports.
+7. Daily review and carry-forward.
+Acceptance criterion: Goals, habits, focus sessions, and daily reviews work end-to-end and persist correctly.
+Phase 8: Planning suggestions and analytics
+Implement:
+1. Rule-based daily planning.
+2. Workload-overflow detection.
+3. Task prioritization suggestions.
+4. Natural-language quick entry for supported formats.
+5. Weekly productivity insights.
+6. Learning progress reports.
+7. Goal and habit summaries.
+Acceptance criterion: Suggestions are based on real application data, explain their reasoning, and never modify schedules without confirmation.
+Phase 9: Polish, test, and document
+Implement and verify:
+1. Responsive design.
+2. Keyboard navigation.
+3. Accessibility improvements.
+4. Loading, empty, and error states.
+5. Database migrations.
+6. Automated tests.
+7. Security checks.
+8. Backup and restore instructions.
+9. Local installation instructions.
+10. Production build and deployment configuration.
+11. Final visual review against the reference website.
+Acceptance criterion: A fresh local installation can be configured, started, used, stopped, restarted, and recovered using the written instructions.
+23. HOW THE CODING AGENT MUST WORK
+Follow this execution protocol throughout development.
+1. Inspect the existing repository before changing anything.
+2. If the repository is empty, scaffold the project using the specified stack.
+3. Check installed versions and existing configuration.
+4. Create a concise implementation plan for the current phase.
+5. Implement the actual functionality, not just its visual appearance.
+6. Run the relevant build and tests.
+7. Fix errors before proceeding.
+8. Verify the affected screens and workflows in a browser whenever browser automation is available.
+9. Update documentation and database migrations.
+10. Commit changes logically if Git is available.
+11. Report completed work, tests performed, known limitations, and the next phase.
+Do not ask for confirmation after every routine implementation decision.
+
+Make reasonable, reversible technical decisions independently. Ask for clarification only when a genuinely consequential decision cannot be resolved safely from the requirements.
+
+Do not skip testing because a feature looks correct.
+
+Do not rewrite working modules unnecessarily.
+
+Do not create a new technology stack without a concrete reason.
+
+If a dependency is unavailable or requires payment, find a suitable free alternative and explain the trade-off.
+
+If the current phase cannot be completed, report the exact blocker and finish all independent work that remains possible.
+24. DEFINITION OF DONE
+The project is complete only when all implemented features work together.
+
+The finished application must:
+- Start locally using documented commands.
+- Use PostgreSQL for persistent data.
+- Provide secure authentication.
+- Support full task management.
+- Display today's tasks correctly.
+- Provide calendar scheduling.
+- Save notes and knowledge resources.
+- Deliver configured reminders when the local runtime permits.
+- Support learning roadmaps and revision.
+- Track goals, habits, focus sessions, and time logs.
+- Produce reports from real persisted data.
+- Handle invalid inputs and failures gracefully.
+- Protect user-owned records.
+- Pass relevant automated tests.
+- Use the requested visual design consistently.
+- Work on desktop and mobile.
+- Have no mandatory paid services.
+- Contain no fake functionality presented as complete.
+- Include clear installation, configuration, backup, and recovery documentation.
+Do not mark any feature complete until its main workflow has been implemented and verified.
+
+Start with Phase 0. Inspect the reference website, establish the architecture and design system, and begin implementation. Do not attempt to build every phase in one untested code-generation pass.
