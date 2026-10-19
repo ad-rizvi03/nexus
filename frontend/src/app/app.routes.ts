@@ -9,6 +9,7 @@ import { HabitsComponent } from './features/habits/habits.component';
 import { FocusComponent } from './features/focus/focus.component';
 import { GoalsComponent } from './features/goals/goals.component';
 import { ReviewsComponent } from './features/reviews/reviews.component';
+import { PlannerComponent } from './features/planner/planner.component';
 import { AnalyticsComponent } from './features/analytics/analytics.component';
 import { SettingsComponent } from './features/settings/settings.component';
 import { authGuard } from './core/guards/auth.guard';
@@ -24,6 +25,7 @@ export const routes: Routes = [
   { path: 'habits', component: HabitsComponent, canActivate: [authGuard] },
   { path: 'focus', component: FocusComponent, canActivate: [authGuard] },
   { path: 'goals', component: GoalsComponent, canActivate: [authGuard] },
+  { path: 'planner', component: PlannerComponent, canActivate: [authGuard] },
   { path: 'review', component: ReviewsComponent, canActivate: [authGuard] },
   { path: 'analytics', component: AnalyticsComponent, canActivate: [authGuard] },
   { path: 'settings', component: SettingsComponent, canActivate: [authGuard] },

@@ -91,6 +91,7 @@ export class CommandPaletteComponent {
     { id: 'nav-learning', title: 'Open Upskilling & Learning Roadmaps', category: 'NAVIGATE', hotkey: 'L', execute: () => this.router.navigate(['/learning']) },
     { id: 'nav-habits', title: 'Open Habit Tracker', category: 'NAVIGATE', hotkey: 'H', execute: () => this.router.navigate(['/habits']) },
     { id: 'nav-goals', title: 'Open Strategic Goals & Milestones', category: 'NAVIGATE', hotkey: 'G', execute: () => this.router.navigate(['/goals']) },
+    { id: 'nav-planner', title: 'Open Smart Daily Planner', category: 'NAVIGATE', hotkey: 'P', execute: () => this.router.navigate(['/planner']) },
     { id: 'nav-review', title: 'Open End-of-Day Review', category: 'NAVIGATE', hotkey: 'R', execute: () => this.router.navigate(['/review']) },
     { id: 'nav-analytics', title: 'Open Workload & Productivity Analytics', category: 'NAVIGATE', hotkey: 'A', execute: () => this.router.navigate(['/analytics']) },
     { id: 'nav-settings', title: 'Open Application Settings', category: 'SYSTEM', hotkey: 'S', execute: () => this.router.navigate(['/settings']) }

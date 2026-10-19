@@ -139,6 +139,7 @@ export class SidebarComponent {
     { label: 'Habits', route: '/habits', icon: 'repeat', hotkey: 'H' },
     { label: 'Focus Timer', route: '/focus', icon: 'clock', hotkey: 'F' },
     { label: 'Strategic Goals', route: '/goals', icon: 'target', hotkey: 'G' },
+    { label: 'Smart Planner', route: '/planner', icon: 'zap', hotkey: 'P' },
     { label: 'Daily Review', route: '/review', icon: 'clipboard-check', hotkey: 'R' },
     { label: 'Analytics', route: '/analytics', icon: 'bar-chart-2', hotkey: 'A' },
     { label: 'Settings & Profile', route: '/settings', icon: 'settings', hotkey: 'S' }
