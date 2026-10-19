@@ -19,4 +19,7 @@ public interface GoalMilestoneRepository extends JpaRepository<GoalMilestone, UU
 
     @Query("SELECT m FROM GoalMilestone m WHERE m.id = :id AND m.goal.id = :goalId AND m.goal.user.id = :userId")
     Optional<GoalMilestone> findByIdAndGoalIdAndUserId(@Param("id") UUID id, @Param("goalId") UUID goalId, @Param("userId") UUID userId);
+
+    @Query("SELECT m FROM GoalMilestone m JOIN FETCH m.goal g WHERE g.user.id = :userId AND m.completed = true AND m.completedAt >= :start AND m.completedAt <= :end")
+    List<GoalMilestone> findCompletedByUserIdAndDateRange(@Param("userId") UUID userId, @Param("start") java.time.Instant start, @Param("end") java.time.Instant end);
 }

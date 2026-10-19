@@ -19,4 +19,7 @@ public interface LearningTopicRepository extends JpaRepository<LearningTopic, UU
 
     @Query("SELECT COUNT(t) FROM LearningTopic t WHERE t.module.roadmap.id = :roadmapId AND t.status = 'COMPLETED'")
     long countCompletedByRoadmapId(@Param("roadmapId") UUID roadmapId);
+
+    @Query("SELECT t FROM LearningTopic t JOIN FETCH t.module m JOIN FETCH m.roadmap r WHERE r.user.id = :userId AND t.status = 'COMPLETED' AND t.completedAt >= :start AND t.completedAt <= :end")
+    List<LearningTopic> findCompletedByUserIdAndDateRange(@Param("userId") UUID userId, @Param("start") java.time.Instant start, @Param("end") java.time.Instant end);
 }

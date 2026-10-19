@@ -1,0 +1,8 @@
+-- Enhancements for Phase 9: Daily Reviews & Task Carry-Forward
+ALTER TABLE daily_reviews
+    ADD COLUMN IF NOT EXISTS missed_deadline_count INT NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS learning_completed_count INT NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS goals_progressed_count INT NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS habits_completed_count INT NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS status VARCHAR(32) NOT NULL DEFAULT 'COMPLETED',
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP;

@@ -41,4 +41,13 @@ public interface TaskRepository extends JpaRepository<Task, UUID>, JpaSpecificat
     long countByGoalIdAndStatus(UUID goalId, TaskStatus status);
 
     List<Task> findByGoalId(UUID goalId);
+
+    @Query("SELECT DISTINCT t FROM Task t LEFT JOIN FETCH t.category LEFT JOIN FETCH t.subtasks WHERE t.user.id = :userId AND ((t.plannedDate = :reviewDate AND t.status = 'COMPLETED') OR (t.completedAt >= :startOfDay AND t.completedAt <= :endOfDay)) ORDER BY t.completedAt DESC")
+    List<Task> findCompletedForDate(@Param("userId") UUID userId, @Param("reviewDate") LocalDate reviewDate, @Param("startOfDay") java.time.Instant startOfDay, @Param("endOfDay") java.time.Instant endOfDay);
+
+    @Query("SELECT DISTINCT t FROM Task t LEFT JOIN FETCH t.category LEFT JOIN FETCH t.subtasks WHERE t.user.id = :userId AND ((t.plannedDate = :reviewDate) OR (t.plannedDate < :reviewDate)) AND t.status != 'COMPLETED' AND t.status != 'CANCELLED' ORDER BY t.plannedDate ASC, t.priority DESC")
+    List<Task> findUnfinishedForReview(@Param("userId") UUID userId, @Param("reviewDate") LocalDate reviewDate);
+
+    @Query("SELECT DISTINCT t FROM Task t LEFT JOIN FETCH t.category LEFT JOIN FETCH t.subtasks WHERE t.user.id = :userId AND t.deadlineDate <= :reviewDate AND t.status != 'COMPLETED' AND t.status != 'CANCELLED' ORDER BY t.deadlineDate ASC")
+    List<Task> findMissedDeadlinesForReview(@Param("userId") UUID userId, @Param("reviewDate") LocalDate reviewDate);
 }
