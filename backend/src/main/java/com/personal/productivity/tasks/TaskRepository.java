@@ -35,4 +35,10 @@ public interface TaskRepository extends JpaRepository<Task, UUID>, JpaSpecificat
 
     @Query("SELECT DISTINCT t FROM Task t LEFT JOIN FETCH t.category WHERE t.user.id = :userId AND t.deadlineDate BETWEEN :startDate AND :endDate ORDER BY t.deadlineDate ASC")
     List<Task> findByUserIdAndDeadlineDateBetween(@Param("userId") UUID userId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    long countByGoalId(UUID goalId);
+
+    long countByGoalIdAndStatus(UUID goalId, TaskStatus status);
+
+    List<Task> findByGoalId(UUID goalId);
 }

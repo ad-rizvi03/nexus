@@ -63,6 +63,9 @@ public class Task {
     @Column(name = "recurrence_rule")
     private String recurrenceRule;
 
+    @Column(name = "goal_id")
+    private UUID goalId;
+
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderBy("sortOrder ASC")
     private List<Subtask> subtasks = new ArrayList<>();
@@ -240,5 +243,13 @@ public class Task {
 
     public Instant getUpdatedAt() {
         return updatedAt;
+    }
+
+    public UUID getGoalId() {
+        return goalId;
+    }
+
+    public void setGoalId(UUID goalId) {
+        this.goalId = goalId;
     }
 }
