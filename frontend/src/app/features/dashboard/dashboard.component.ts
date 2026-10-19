@@ -1,18 +1,7 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { HealthService } from '../../core/services/health.service';
-
-export interface TaskSummary {
-  id: string;
-  title: string;
-  category: string;
-  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
-  status: 'TO_DO' | 'IN_PROGRESS' | 'BLOCKED' | 'COMPLETED';
-  estimatedMinutes: number;
-  deadline?: string;
-  plannedDate?: string;
-}
+import { TaskService, TaskItem, DashboardTodayResponse } from '../../core/services/task.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -22,25 +11,39 @@ export interface TaskSummary {
     <div class="dashboard-viewport">
       <!-- Top Operational Telemetry Bar -->
       <section class="telemetry-deck">
-        <div class="telemetry-card">
+        <div class="telemetry-card" [class.alert-card]="isOverloaded()">
           <div class="card-eyebrow font-mono">TIME PLANNED TODAY</div>
-          <div class="card-value num-feature text-gold-gradient">{{ plannedMinutesToday() }}m</div>
-          <div class="card-caption font-mono">CAPACITY: {{ availableMinutesToday }}m ({{ capacityRemaining() }}m REMAINING)</div>
+          <div class="card-value num-feature" [class.text-gold-gradient]="!isOverloaded()" [class.text-error]="isOverloaded()">
+            {{ plannedMinutesToday() }}m
+          </div>
+          <div class="card-caption font-mono">
+            CAPACITY: {{ availableMinutesToday() }}m ({{ remainingMinutes() }}m {{ isOverloaded() ? 'OVERLOAD' : 'REMAINING' }})
+          </div>
           <div class="capacity-meter">
-            <div class="meter-fill" [style.width.%]="capacityPercentage()"></div>
+            <div
+              class="meter-fill"
+              [class.meter-overload]="isOverloaded()"
+              [style.width.%]="capacityPercentage()"
+            ></div>
           </div>
         </div>
 
         <div class="telemetry-card">
           <div class="card-eyebrow font-mono">TASKS ACTIVE TODAY</div>
           <div class="card-value num-feature">{{ activeTasksCount() }}</div>
-          <div class="card-caption font-mono">{{ completedTasksCount() }} COMPLETED · {{ inProgressCount() }} IN PROGRESS</div>
+          <div class="card-caption font-mono">
+            {{ completedTasksCount() }} COMPLETED · {{ inProgressCount() }} IN PROGRESS
+          </div>
         </div>
 
         <div class="telemetry-card" [class.alert-card]="overdueTasks().length > 0">
           <div class="card-eyebrow font-mono">OVERDUE ITEMS</div>
-          <div class="card-value num-feature" [class.alert-val]="overdueTasks().length > 0">{{ overdueTasks().length }}</div>
-          <div class="card-caption font-mono">REQUIRES ATTENTION & RESCHEDULING</div>
+          <div class="card-value num-feature" [class.alert-val]="overdueTasks().length > 0">
+            {{ overdueTasks().length }}
+          </div>
+          <div class="card-caption font-mono">
+            {{ overdueTasks().length > 0 ? 'REQUIRES ATTENTION & RESCHEDULING' : 'BACKLOG IN GOOD ORDER' }}
+          </div>
         </div>
 
         <div class="telemetry-card">
@@ -63,20 +66,25 @@ export interface TaskSummary {
               </div>
               <div class="banner-content">
                 <h2 class="task-title">{{ task.title }}</h2>
+                @if (task.description) {
+                  <p class="task-desc">{{ task.description }}</p>
+                }
                 <div class="task-meta font-mono">
-                  <span class="meta-item">CATEGORY: {{ task.category }}</span>
-                  <span class="meta-item">ESTIMATED: {{ task.estimatedMinutes }}m</span>
-                  @if (task.deadline) {
-                    <span class="meta-item text-warning">DUE: {{ task.deadline }}</span>
+                  @if (task.category) {
+                    <span class="meta-item">CATEGORY: {{ task.category.name }}</span>
+                  }
+                  <span class="meta-item">ESTIMATED: {{ task.estimatedDurationMinutes || 45 }}m</span>
+                  @if (task.deadlineDate) {
+                    <span class="meta-item text-warning">DUE: {{ task.deadlineDate }}</span>
                   }
                 </div>
               </div>
               <div class="banner-actions">
-                <button type="button" class="btn btn-gold btn-sm" (click)="markComplete(task.id)">
+                <button type="button" class="btn btn-gold btn-sm font-mono" (click)="markComplete(task.id)">
                   ✓ MARK COMPLETED
                 </button>
-                <button type="button" class="btn btn-ghost btn-sm" routerLink="/focus">
-                  START FOCUS (25m)
+                <button type="button" class="btn btn-ghost btn-sm font-mono" routerLink="/focus">
+                  START FOCUS ({{ task.estimatedDurationMinutes || 25 }}m)
                 </button>
               </div>
             </section>
@@ -89,7 +97,7 @@ export interface TaskSummary {
                 <span class="panel-tag font-mono">AGENDA</span>
                 <h3 class="panel-heading">Planned For Today</h3>
               </div>
-              <button type="button" class="btn btn-ghost btn-sm" routerLink="/tasks">
+              <button type="button" class="btn btn-ghost btn-sm font-mono" routerLink="/tasks">
                 VIEW ALL TASKS →
               </button>
             </div>
@@ -103,8 +111,15 @@ export interface TaskSummary {
                   <div class="task-info">
                     <span class="title">{{ task.title }}</span>
                     <span class="tag-row font-mono">
-                      <span class="category-chip">{{ task.category }}</span>
-                      <span>· {{ task.estimatedMinutes }}m</span>
+                      @if (task.category) {
+                        <span class="category-chip" [style.color]="task.category.color || 'var(--accent-gold)'">
+                          {{ task.category.name }}
+                        </span>
+                      }
+                      <span>· {{ task.estimatedDurationMinutes || 45 }}m</span>
+                      @if (task.subtasks && task.subtasks.length > 0) {
+                        <span>· {{ getCompletedSubtaskCount(task) }}/{{ task.subtasks.length }} subtasks</span>
+                      }
                     </span>
                   </div>
                   <span class="badge font-mono" [ngClass]="getPriorityBadgeClass(task.priority)">
@@ -118,7 +133,7 @@ export interface TaskSummary {
               @if (todayTasks().length === 0) {
                 <div class="empty-agenda font-mono">
                   <span>NO TASKS SCHEDULED FOR TODAY.</span>
-                  <button type="button" class="btn btn-ghost btn-sm mt-2" routerLink="/tasks">
+                  <button type="button" class="btn btn-ghost btn-sm mt-2 font-mono" routerLink="/tasks">
                     + PLAN WORK FROM BACKLOG
                   </button>
                 </div>
@@ -141,8 +156,8 @@ export interface TaskSummary {
                     <div class="task-info">
                       <span class="title">{{ task.title }}</span>
                       <span class="tag-row font-mono">
-                        <span class="text-error">DEADLINE PASSED: {{ task.deadline }}</span>
-                        <span>· {{ task.estimatedMinutes }}m</span>
+                        <span class="text-error">DEADLINE PASSED: {{ task.deadlineDate }}</span>
+                        <span>· {{ task.estimatedDurationMinutes || 45 }}m</span>
                       </span>
                     </div>
                     <div class="row-actions">
@@ -207,7 +222,7 @@ export interface TaskSummary {
             <p class="text-secondary text-xs mt-1">
               Review completed work, reflect on mistakes, and manage carry-forward without endless accumulation.
             </p>
-            <a routerLink="/review" class="btn btn-primary btn-sm mt-3 w-full">
+            <a routerLink="/review" class="btn btn-primary btn-sm mt-3 w-full font-mono">
               START DAILY REVIEW
             </a>
           </div>
@@ -218,21 +233,12 @@ export interface TaskSummary {
   styleUrl: './dashboard.component.scss'
 })
 export class DashboardComponent implements OnInit {
-  readonly healthService = inject(HealthService);
+  private readonly taskService = inject(TaskService);
 
-  readonly availableMinutesToday = 240; // 4 hours user available study/focus time
   readonly weeklyTargetHours = 10.0;
 
-  readonly todayTasks = signal<TaskSummary[]>([
-    { id: '1', title: 'Implement Flyway schema and verify PostgreSQL indexes', category: 'Engineering', priority: 'HIGH', status: 'COMPLETED', estimatedMinutes: 45 },
-    { id: '2', title: 'Complete Angular console shell & command palette navigation', category: 'Engineering', priority: 'HIGH', status: 'IN_PROGRESS', estimatedMinutes: 60 },
-    { id: '3', title: 'Review Spring Security session management and CORS policy', category: 'Security', priority: 'MEDIUM', status: 'TO_DO', estimatedMinutes: 30 },
-    { id: '4', title: 'Solve 2 LeetCode dynamic programming problems', category: 'Learning', priority: 'MEDIUM', status: 'TO_DO', estimatedMinutes: 50, deadline: '22:00' }
-  ]);
-
-  readonly overdueTasks = signal<TaskSummary[]>([
-    { id: '5', title: 'Update project dependencies documentation in ARCHITECTURE.md', category: 'Personal', priority: 'LOW', status: 'TO_DO', estimatedMinutes: 20, deadline: 'Yesterday' }
-  ]);
+  readonly dashboardData = signal<DashboardTodayResponse | null>(null);
+  readonly loading = signal(true);
 
   readonly habits = signal([
     { name: 'Morning Code & System Design Practice', streak: 12, completed: true },
@@ -240,36 +246,47 @@ export class DashboardComponent implements OnInit {
     { name: 'Technical Reading / Documentation Review', streak: 5, completed: false }
   ]);
 
-  nextActionTask = signal<TaskSummary | null>(null);
+  readonly todayTasks = computed<TaskItem[]>(() => this.dashboardData()?.todayTasks || []);
+  readonly overdueTasks = computed<TaskItem[]>(() => this.dashboardData()?.overdueTasks || []);
+  readonly inProgressTasks = computed<TaskItem[]>(() => this.dashboardData()?.inProgressTasks || []);
+
+  readonly plannedMinutesToday = computed(() => this.dashboardData()?.totalPlannedMinutesToday ?? 0);
+  readonly availableMinutesToday = computed(() => this.dashboardData()?.availableMinutesToday ?? 120);
+  readonly remainingMinutes = computed(() => this.dashboardData()?.remainingCapacityMinutes ?? 0);
+  readonly isOverloaded = computed(() => this.dashboardData()?.isOverloaded ?? false);
+  readonly activeTasksCount = computed(() => this.dashboardData()?.activeCountToday ?? 0);
+  readonly completedTasksCount = computed(() => this.dashboardData()?.completedCountToday ?? 0);
+  readonly inProgressCount = computed(() => this.inProgressTasks().length);
+
+  readonly capacityPercentage = computed(() => {
+    const planned = this.plannedMinutesToday();
+    const available = this.availableMinutesToday();
+    if (!available || available === 0) return 0;
+    return Math.min(100, Math.round((planned / available) * 100));
+  });
+
+  readonly nextActionTask = computed<TaskItem | null>(() => {
+    const inProg = this.inProgressTasks();
+    if (inProg.length > 0) return inProg[0];
+    const pending = this.todayTasks().find(t => t.status === 'TO_DO');
+    return pending || null;
+  });
 
   ngOnInit() {
-    this.refreshNextAction();
+    this.refreshDashboard();
   }
 
-  plannedMinutesToday(): number {
-    return this.todayTasks()
-      .filter(t => t.status !== 'COMPLETED')
-      .reduce((acc, t) => acc + t.estimatedMinutes, 0);
-  }
-
-  capacityRemaining(): number {
-    return Math.max(0, this.availableMinutesToday - this.plannedMinutesToday());
-  }
-
-  capacityPercentage(): number {
-    return Math.min(100, Math.round((this.plannedMinutesToday() / this.availableMinutesToday) * 100));
-  }
-
-  activeTasksCount(): number {
-    return this.todayTasks().filter(t => t.status !== 'COMPLETED').length;
-  }
-
-  completedTasksCount(): number {
-    return this.todayTasks().filter(t => t.status === 'COMPLETED').length;
-  }
-
-  inProgressCount(): number {
-    return this.todayTasks().filter(t => t.status === 'IN_PROGRESS').length;
+  refreshDashboard() {
+    this.taskService.getDashboardToday().subscribe({
+      next: (data) => {
+        this.dashboardData.set(data);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        console.error('Failed to load dashboard data', err);
+        this.loading.set(false);
+      }
+    });
   }
 
   weeklyLearningHours(): number {
@@ -280,46 +297,35 @@ export class DashboardComponent implements OnInit {
     return Math.round((this.weeklyLearningHours() / this.weeklyTargetHours) * 100);
   }
 
-  refreshNextAction() {
-    const active = this.todayTasks().find(t => t.status === 'IN_PROGRESS') ||
-                   this.todayTasks().find(t => t.status === 'TO_DO');
-    this.nextActionTask.set(active || null);
-  }
-
-  toggleTaskStatus(task: TaskSummary) {
-    const updated = this.todayTasks().map(t => {
-      if (t.id === task.id) {
-        const nextStatus = t.status === 'COMPLETED' ? 'TO_DO' : 'COMPLETED';
-        return { ...t, status: nextStatus as any };
-      }
-      return t;
+  toggleTaskStatus(task: TaskItem) {
+    const nextStatus = task.status === 'COMPLETED' ? 'TO_DO' : 'COMPLETED';
+    this.taskService.updateStatus(task.id, nextStatus).subscribe({
+      next: () => this.refreshDashboard(),
+      error: (err) => console.error('Failed to toggle task status', err)
     });
-    this.todayTasks.set(updated);
-    this.refreshNextAction();
   }
 
   markComplete(taskId: string) {
-    const updated = this.todayTasks().map(t => {
-      if (t.id === taskId) {
-        return { ...t, status: 'COMPLETED' as const };
-      }
-      return t;
+    this.taskService.updateStatus(taskId, 'COMPLETED').subscribe({
+      next: () => this.refreshDashboard(),
+      error: (err) => console.error('Failed to mark task complete', err)
     });
-    this.todayTasks.set(updated);
-    this.refreshNextAction();
   }
 
   rescheduleToToday(taskId: string) {
-    const target = this.overdueTasks().find(t => t.id === taskId);
-    if (target) {
-      this.overdueTasks.set(this.overdueTasks().filter(t => t.id !== taskId));
-      this.todayTasks.update(list => [...list, { ...target, plannedDate: 'Today' }]);
-      this.refreshNextAction();
-    }
+    const today = new Date().toISOString().substring(0, 10);
+    this.taskService.updateTask(taskId, { plannedDate: today }).subscribe({
+      next: () => this.refreshDashboard(),
+      error: (err) => console.error('Failed to reschedule task', err)
+    });
   }
 
   toggleHabit(habit: any) {
     habit.completed = !habit.completed;
+  }
+
+  getCompletedSubtaskCount(task: TaskItem): number {
+    return (task.subtasks || []).filter(s => s.completed).length;
   }
 
   getPriorityBadgeClass(priority: string): string {

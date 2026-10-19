@@ -75,6 +75,10 @@
       background: var(--gold-gradient);
       border-radius: var(--radius-full);
       transition: width var(--transition-normal);
+
+      &.meter-overload {
+        background: var(--accent-error);
+      }
     }
   }
 }

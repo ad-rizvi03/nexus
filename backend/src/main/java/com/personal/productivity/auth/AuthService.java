@@ -60,7 +60,7 @@ public class AuthService {
         return buildProfileResponse(user, settings);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public UserProfileResponse login(LoginRequest request, HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
         User user = userRepository.findByEmail(request.email().toLowerCase().trim())
                 .orElseThrow(() -> new UnauthorizedException("Invalid email or password"));
