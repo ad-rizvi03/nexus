@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { LoginComponent } from './features/auth/login.component';
 import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { TasksComponent } from './features/tasks/tasks.component';
 import { CalendarComponent } from './features/calendar/calendar.component';
@@ -10,19 +11,21 @@ import { GoalsComponent } from './features/goals/goals.component';
 import { ReviewsComponent } from './features/reviews/reviews.component';
 import { AnalyticsComponent } from './features/analytics/analytics.component';
 import { SettingsComponent } from './features/settings/settings.component';
+import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
+  { path: 'login', component: LoginComponent },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-  { path: 'dashboard', component: DashboardComponent },
-  { path: 'tasks', component: TasksComponent },
-  { path: 'calendar', component: CalendarComponent },
-  { path: 'notes', component: NotesComponent },
-  { path: 'learning', component: LearningComponent },
-  { path: 'habits', component: HabitsComponent },
-  { path: 'focus', component: FocusComponent },
-  { path: 'goals', component: GoalsComponent },
-  { path: 'review', component: ReviewsComponent },
-  { path: 'analytics', component: AnalyticsComponent },
-  { path: 'settings', component: SettingsComponent },
+  { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
+  { path: 'tasks', component: TasksComponent, canActivate: [authGuard] },
+  { path: 'calendar', component: CalendarComponent, canActivate: [authGuard] },
+  { path: 'notes', component: NotesComponent, canActivate: [authGuard] },
+  { path: 'learning', component: LearningComponent, canActivate: [authGuard] },
+  { path: 'habits', component: HabitsComponent, canActivate: [authGuard] },
+  { path: 'focus', component: FocusComponent, canActivate: [authGuard] },
+  { path: 'goals', component: GoalsComponent, canActivate: [authGuard] },
+  { path: 'review', component: ReviewsComponent, canActivate: [authGuard] },
+  { path: 'analytics', component: AnalyticsComponent, canActivate: [authGuard] },
+  { path: 'settings', component: SettingsComponent, canActivate: [authGuard] },
   { path: '**', redirectTo: 'dashboard' }
 ];

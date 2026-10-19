@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { HealthService } from '../../core/services/health.service';
+import { AuthService } from '../../core/auth/auth.service';
 
 interface NavItem {
   label: string;
@@ -44,6 +45,22 @@ interface NavItem {
       <div class="badge-container">
         <span class="badge badge-gold">FILE · 001 · PRODUCTIVITY</span>
       </div>
+
+      <!-- Authenticated Operator Info -->
+      @if (authService.currentUser(); as user) {
+        <div class="operator-profile-card">
+          <div class="operator-avatar font-mono">
+            {{ getInitials(user.displayName) }}
+          </div>
+          <div class="operator-info">
+            <span class="operator-name">{{ user.displayName }}</span>
+            <span class="operator-email font-mono">{{ user.email }}</span>
+          </div>
+          <button type="button" class="btn-logout font-mono" (click)="authService.logout().subscribe()" title="Sign Out">
+            ⎋
+          </button>
+        </div>
+      }
 
       <!-- Navigation Links -->
       <nav class="nav-menu">
@@ -108,6 +125,7 @@ interface NavItem {
 })
 export class SidebarComponent {
   readonly healthService = inject(HealthService);
+  readonly authService = inject(AuthService);
 
   readonly mainNav: NavItem[] = [
     { label: 'Dashboard', route: '/dashboard', icon: 'gauge', hotkey: 'D' },
@@ -123,6 +141,15 @@ export class SidebarComponent {
     { label: 'Strategic Goals', route: '/goals', icon: 'target', hotkey: 'G' },
     { label: 'Daily Review', route: '/review', icon: 'clipboard-check', hotkey: 'R' },
     { label: 'Analytics', route: '/analytics', icon: 'bar-chart-2', hotkey: 'A' },
-    { label: 'Settings', route: '/settings', icon: 'settings', hotkey: 'S' }
+    { label: 'Settings & Profile', route: '/settings', icon: 'settings', hotkey: 'S' }
   ];
+
+  getInitials(name: string): string {
+    if (!name) return 'OP';
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  }
 }
