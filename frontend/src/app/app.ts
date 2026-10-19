@@ -1,6 +1,7 @@
 import { Component, signal, HostListener, inject } from '@angular/core';
-import { Router, RouterOutlet } from '@angular/router';
+import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { filter } from 'rxjs';
 import { SidebarComponent } from './layout/sidebar/sidebar.component';
 import { TopbarComponent } from './layout/topbar/topbar.component';
 import { CommandPaletteComponent } from './layout/command-palette/command-palette.component';
@@ -11,7 +12,7 @@ import { AuthService } from './core/auth/auth.service';
   standalone: true,
   imports: [CommonModule, RouterOutlet, SidebarComponent, TopbarComponent, CommandPaletteComponent],
   template: `
-    @if (authService.isAuthenticated()) {
+    @if (authService.isAuthenticated() && !isLoginRoute()) {
       <div class="app-layout">
         <!-- Persistent Console Sidebar -->
         <app-sidebar></app-sidebar>
@@ -50,6 +51,16 @@ export class App {
   private readonly router = inject(Router);
 
   showCommandPalette = signal(false);
+  isLoginRoute = signal(false);
+
+  constructor() {
+    this.isLoginRoute.set(window.location.pathname.startsWith('/login'));
+    this.router.events.pipe(
+      filter((e): e is NavigationEnd => e instanceof NavigationEnd)
+    ).subscribe((event) => {
+      this.isLoginRoute.set(event.urlAfterRedirects.startsWith('/login') || event.url.startsWith('/login'));
+    });
+  }
 
   @HostListener('window:keydown', ['$event'])
   handleGlobalShortcuts(event: KeyboardEvent) {

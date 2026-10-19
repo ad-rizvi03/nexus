@@ -1,7 +1,7 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { catchError, map, of, tap, Observable } from 'rxjs';
+import { catchError, map, of, tap, shareReplay, Observable } from 'rxjs';
 
 export interface User {
   id: string;
@@ -43,29 +43,38 @@ export class AuthService {
   readonly isCheckingAuth = signal<boolean>(true);
 
   constructor() {
-    this.checkInitialAuth();
+    this.checkInitialAuth().subscribe();
   }
 
-  checkInitialAuth() {
+  private initialAuth$?: Observable<boolean>;
+
+  checkInitialAuth(): Observable<boolean> {
+    if (this.initialAuth$) {
+      return this.initialAuth$;
+    }
     this.isCheckingAuth.set(true);
-    this.http.get<UserProfileResponse>('/api/v1/auth/me', { withCredentials: true }).pipe(
+    this.initialAuth$ = this.http.get<UserProfileResponse>('/api/v1/auth/me', { withCredentials: true }).pipe(
       tap((res) => {
         this.currentUser.set(res.user);
         this.userSettings.set(res.settings);
         this.isAuthenticated.set(true);
         this.isCheckingAuth.set(false);
       }),
+      map(() => true),
       catchError(() => {
         this.currentUser.set(null);
         this.userSettings.set(null);
         this.isAuthenticated.set(false);
         this.isCheckingAuth.set(false);
-        return of(null);
-      })
-    ).subscribe();
+        return of(false);
+      }),
+      shareReplay(1)
+    );
+    return this.initialAuth$;
   }
 
   register(data: { email: string; password: string; displayName: string }): Observable<UserProfileResponse> {
+    this.initialAuth$ = undefined;
     return this.http.post<UserProfileResponse>('/api/v1/auth/register', data, { withCredentials: true }).pipe(
       tap((res) => {
         this.currentUser.set(res.user);
@@ -76,6 +85,7 @@ export class AuthService {
   }
 
   login(data: { email: string; password: string }): Observable<UserProfileResponse> {
+    this.initialAuth$ = undefined;
     return this.http.post<UserProfileResponse>('/api/v1/auth/login', data, { withCredentials: true }).pipe(
       tap((res) => {
         this.currentUser.set(res.user);
@@ -86,6 +96,7 @@ export class AuthService {
   }
 
   logout(): Observable<any> {
+    this.initialAuth$ = undefined;
     return this.http.post('/api/v1/auth/logout', {}, { withCredentials: true }).pipe(
       tap(() => {
         this.currentUser.set(null);

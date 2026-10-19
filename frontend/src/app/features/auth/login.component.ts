@@ -35,6 +35,28 @@ import { AuthService } from '../../core/auth/auth.service';
           </p>
         </div>
 
+        <!-- Active Session Detected Banner -->
+        @if (authService.isAuthenticated()) {
+          <div class="active-session-banner font-mono">
+            <div class="session-info">
+              <span class="session-dot"></span>
+              <span class="session-label">ACTIVE OPERATOR SESSION</span>
+            </div>
+            <div class="session-details">
+              <strong>{{ authService.currentUser()?.displayName }}</strong>
+              <span class="session-email">({{ authService.currentUser()?.email }})</span>
+            </div>
+            <div class="session-actions">
+              <button type="button" class="btn btn-primary btn-sm" (click)="goToDashboard()">
+                RETURN TO DASHBOARD →
+              </button>
+              <button type="button" class="btn-logout-link" (click)="signOut()">
+                SIGN OUT
+              </button>
+            </div>
+          </div>
+        }
+
         <!-- Mode Toggle Tabs -->
         <div class="tab-strip font-mono">
           <button
@@ -188,6 +210,53 @@ import { AuthService } from '../../core/auth/auth.service';
         }
       }
     }
+    .active-session-banner {
+      background: rgba(198, 165, 106, 0.08);
+      border: 1px solid rgba(198, 165, 106, 0.35);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 0.72rem;
+      .session-info {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--accent-gold);
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        .session-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: var(--accent-gold);
+          box-shadow: 0 0 8px var(--accent-gold);
+        }
+      }
+      .session-details {
+        color: var(--text-primary);
+        .session-email {
+          color: var(--text-secondary);
+          margin-left: 6px;
+        }
+      }
+      .session-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 4px;
+        .btn-logout-link {
+          background: none;
+          border: none;
+          color: var(--status-error);
+          cursor: pointer;
+          font-size: 0.68rem;
+          letter-spacing: 0.1em;
+          text-decoration: underline;
+        }
+      }
+    }
     .alert-box {
       background-color: rgba(215, 126, 126, 0.12);
       border: 1px solid rgba(215, 126, 126, 0.4);
@@ -230,7 +299,7 @@ import { AuthService } from '../../core/auth/auth.service';
   `]
 })
 export class LoginComponent {
-  private readonly authService = inject(AuthService);
+  readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
   isRegisterMode = signal(false);
@@ -241,6 +310,14 @@ export class LoginComponent {
   email = 'operator@local.dev';
   password = 'NewSecurePassword456!';
   displayName = '';
+
+  goToDashboard() {
+    this.router.navigate(['/dashboard']);
+  }
+
+  signOut() {
+    this.authService.logout().subscribe();
+  }
 
   setMode(register: boolean) {
     this.isRegisterMode.set(register);
