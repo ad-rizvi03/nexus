@@ -10,3 +10,8 @@ backend/.mvn/wrapper/maven-wrapper.jar
 *.iml
 .DS_Store
 Thumbs.db
+
+# Documentation and scratch files
+Requirements.txt
+requirements.txt
+
