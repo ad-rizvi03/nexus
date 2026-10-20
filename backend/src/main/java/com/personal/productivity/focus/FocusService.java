@@ -223,6 +223,31 @@ public class FocusService {
     }
 
     @Transactional
+    public FocusSessionDto.Response updateSession(UUID userId, UUID id, FocusSessionDto.ManualRequest req) {
+        FocusSession session = focusSessionRepository.findByIdAndUserId(id, userId)
+                .orElseThrow(() -> new NoSuchElementException("Focus session not found: " + id));
+
+        if (req.durationMinutes() != null) {
+            session.setDurationMinutes(req.durationMinutes());
+        }
+        if (req.notes() != null) {
+            session.setNotes(req.notes());
+        }
+        if (req.sessionType() != null) {
+            session.setSessionType(req.sessionType());
+        }
+        if (req.taskId() != null) {
+            session.setTask(taskRepository.findById(req.taskId()).orElse(null));
+        }
+        if (req.learningTopicId() != null) {
+            session.setLearningTopic(learningTopicRepository.findById(req.learningTopicId()).orElse(null));
+        }
+
+        session = focusSessionRepository.save(session);
+        return toResponse(session);
+    }
+
+    @Transactional
     public void deleteSession(UUID userId, UUID id) {
         FocusSession session = focusSessionRepository.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new NoSuchElementException("Focus session not found: " + id));

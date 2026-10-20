@@ -110,4 +110,21 @@
       letter-spacing: 0.1em;
     }
   }
+
+  .ai-topbar-btn {
+    background: linear-gradient(135deg, rgba(198, 165, 106, 0.15) 0%, rgba(229, 201, 143, 0.25) 100%);
+    border: 1px solid rgba(198, 165, 106, 0.4);
+    color: #E5C98F;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+    &:hover {
+      background: linear-gradient(135deg, rgba(198, 165, 106, 0.25) 0%, rgba(229, 201, 143, 0.35) 100%);
+      border-color: #C6A56A;
+      box-shadow: 0 0 12px rgba(198, 165, 106, 0.25);
+    }
+  }
 }

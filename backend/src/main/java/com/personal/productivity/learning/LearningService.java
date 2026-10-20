@@ -211,6 +211,13 @@ public class LearningService {
         return buildRevisionResponse(session);
     }
 
+    @Transactional
+    public void deleteRevision(User user, UUID revisionId) {
+        RevisionSession session = revisionRepository.findByIdAndUserId(revisionId, user.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Revision session not found"));
+        revisionRepository.delete(session);
+    }
+
     // PRACTICE LOGS
     @Transactional(readOnly = true)
     public List<PracticeLogDto.Response> getPracticeLogs(User user, UUID roadmapId) {
@@ -237,6 +244,13 @@ public class LearningService {
         );
         log = practiceLogRepository.save(log);
         return buildPracticeLogResponse(log);
+    }
+
+    @Transactional
+    public void deletePracticeLog(User user, UUID logId) {
+        PracticeLog log = practiceLogRepository.findByIdAndUserId(logId, user.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Practice log not found"));
+        practiceLogRepository.delete(log);
     }
 
     // SEEDING

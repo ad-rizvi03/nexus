@@ -3,6 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CalendarService, CalendarEvent, RescheduleRequest } from '../../core/services/calendar.service';
 import { TaskService, Category, CreateTaskRequest } from '../../core/services/task.service';
+import { LearningService } from '../../core/services/learning.service';
+import { ConfirmDialogService } from '../../shared/confirm-dialog/confirm-dialog.service';
+import { ToastService } from '../../shared/toast/toast.service';
 
 type CalendarViewMode = 'MONTH' | 'WEEK' | 'DAY';
 
@@ -387,6 +390,13 @@ interface DayCell {
                   SAVE RESCHEDULE
                 </button>
               }
+              <button
+                type="button"
+                class="btn btn-error btn-sm font-mono"
+                (click)="deleteCalendarEvent(ev)"
+              >
+                DELETE RECORD
+              </button>
               <button type="button" class="btn btn-ghost btn-sm font-mono" (click)="selectedEvent.set(null)">
                 CLOSE
               </button>
@@ -785,6 +795,8 @@ interface DayCell {
 export class CalendarComponent implements OnInit {
   private readonly calendarService = inject(CalendarService);
   private readonly taskService = inject(TaskService);
+  private readonly confirmDialog = inject(ConfirmDialogService);
+  private readonly toastService = inject(ToastService);
 
   readonly viewMode = signal<CalendarViewMode>('MONTH');
   readonly currentDate = signal<Date>(new Date());
@@ -1056,6 +1068,44 @@ export class CalendarComponent implements OnInit {
       },
       error: (err) => console.error('Failed to reschedule task', err)
     });
+  }
+
+  private readonly learningService = inject(LearningService);
+
+  async deleteCalendarEvent(event: CalendarEvent) {
+    const ok = await this.confirmDialog.confirm({
+      title: 'DELETE CALENDAR ITEM',
+      message: `Permanently delete "${event.title}"?`,
+      isDestructive: true,
+      confirmText: 'DELETE ITEM'
+    });
+    if (!ok) return;
+
+    if (event.type === 'REVISION_SESSION') {
+      this.learningService.deleteRevision(event.id).subscribe({
+        next: () => {
+          this.selectedEvent.set(null);
+          this.loadEvents();
+          this.toastService.success(`Revision session removed.`, 'EVENT REMOVED');
+        },
+        error: (err) => {
+          console.error('Failed to delete revision', err);
+          this.toastService.error('Failed to delete revision session.');
+        }
+      });
+    } else {
+      this.taskService.deleteTask(event.id).subscribe({
+        next: () => {
+          this.selectedEvent.set(null);
+          this.loadEvents();
+          this.toastService.success(`Task removed from schedule.`, 'EVENT REMOVED');
+        },
+        error: (err) => {
+          console.error('Failed to delete task', err);
+          this.toastService.error('Failed to delete task.');
+        }
+      });
+    }
   }
 
   getBadgeClassForEvent(event: CalendarEvent): string {

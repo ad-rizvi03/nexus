@@ -133,6 +133,13 @@ public class LearningController {
         return ResponseEntity.ok(learningService.completeRevision(user, revisionId));
     }
 
+    @DeleteMapping("/revisions/{revisionId}")
+    public ResponseEntity<Void> deleteRevision(@PathVariable UUID revisionId) {
+        User user = authService.getCurrentAuthenticatedUser();
+        learningService.deleteRevision(user, revisionId);
+        return ResponseEntity.noContent().build();
+    }
+
     // PRACTICE LOGS
     @GetMapping("/practice-logs")
     public ResponseEntity<List<PracticeLogDto.Response>> getPracticeLogs(@RequestParam(required = false) UUID roadmapId) {
@@ -144,5 +151,12 @@ public class LearningController {
     public ResponseEntity<PracticeLogDto.Response> createPracticeLog(@Valid @RequestBody PracticeLogDto.Request request) {
         User user = authService.getCurrentAuthenticatedUser();
         return new ResponseEntity<>(learningService.createPracticeLog(user, request), HttpStatus.CREATED);
+    }
+
+    @DeleteMapping("/practice-logs/{logId}")
+    public ResponseEntity<Void> deletePracticeLog(@PathVariable UUID logId) {
+        User user = authService.getCurrentAuthenticatedUser();
+        learningService.deletePracticeLog(user, logId);
+        return ResponseEntity.noContent().build();
     }
 }

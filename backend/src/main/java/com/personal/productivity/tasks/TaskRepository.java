@@ -42,6 +42,8 @@ public interface TaskRepository extends JpaRepository<Task, UUID>, JpaSpecificat
 
     List<Task> findByGoalId(UUID goalId);
 
+    List<Task> findByCategoryId(UUID categoryId);
+
     @Query("SELECT DISTINCT t FROM Task t LEFT JOIN FETCH t.category LEFT JOIN FETCH t.subtasks WHERE t.user.id = :userId AND ((t.plannedDate = :reviewDate AND t.status = 'COMPLETED') OR (t.completedAt >= :startOfDay AND t.completedAt <= :endOfDay)) ORDER BY t.completedAt DESC")
     List<Task> findCompletedForDate(@Param("userId") UUID userId, @Param("reviewDate") LocalDate reviewDate, @Param("startOfDay") java.time.Instant startOfDay, @Param("endOfDay") java.time.Instant endOfDay);
 

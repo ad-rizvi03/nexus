@@ -15,6 +15,8 @@ public interface DailyReviewRepository extends JpaRepository<DailyReview, UUID> 
 
     Optional<DailyReview> findByUserIdAndReviewDate(UUID userId, LocalDate reviewDate);
 
+    Optional<DailyReview> findByIdAndUserId(UUID id, UUID userId);
+
     List<DailyReview> findAllByUserIdOrderByReviewDateDesc(UUID userId);
 
     @Query("SELECT r FROM DailyReview r WHERE r.user.id = :userId AND r.reviewDate BETWEEN :startDate AND :endDate ORDER BY r.reviewDate ASC")

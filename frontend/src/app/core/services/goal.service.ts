@@ -100,6 +100,10 @@ export class GoalService {
     return this.http.post<Goal>(`${this.baseUrl}/${goalId}/milestones`, request);
   }
 
+  updateMilestone(goalId: string, milestoneId: string, request: GoalMilestoneRequest): Observable<Goal> {
+    return this.http.put<Goal>(`${this.baseUrl}/${goalId}/milestones/${milestoneId}`, request);
+  }
+
   deleteMilestone(goalId: string, milestoneId: string): Observable<Goal> {
     return this.http.delete<Goal>(`${this.baseUrl}/${goalId}/milestones/${milestoneId}`);
   }

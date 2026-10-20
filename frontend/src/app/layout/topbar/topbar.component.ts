@@ -10,9 +10,9 @@ import { HealthService } from '../../core/services/health.service';
     <header class="topbar">
       <!-- Breadcrumb / Location Indicator -->
       <div class="topbar-left">
-        <span class="location-code">LOC · LOCALHOST:4201</span>
+        <span class="context-title font-sans">Nexus Workspace</span>
         <span class="divider">/</span>
-        <span class="context-title">PERSONAL OPERATOR CONSOLE</span>
+        <span class="location-code font-mono">Productivity Engine</span>
       </div>
 
       <!-- Center: Command Palette Trigger -->
@@ -32,6 +32,12 @@ import { HealthService } from '../../core/services/health.service';
           <span class="clock-tz">UTC</span>
         </div>
 
+        <!-- Global AI Copilot Action -->
+        <button type="button" class="btn btn-secondary btn-sm font-mono ai-topbar-btn" (click)="openAiCopilot.emit()">
+          <span>✨</span>
+          <span>AI COPILOT</span>
+        </button>
+
         <!-- Quick Add Action -->
         <button type="button" class="btn btn-primary btn-sm" (click)="quickAdd.emit()">
           <span>+</span>
@@ -44,6 +50,7 @@ import { HealthService } from '../../core/services/health.service';
 })
 export class TopbarComponent implements OnInit, OnDestroy {
   @Output() openCommandPalette = new EventEmitter<void>();
+  @Output() openAiCopilot = new EventEmitter<void>();
   @Output() quickAdd = new EventEmitter<void>();
 
   readonly healthService = inject(HealthService);

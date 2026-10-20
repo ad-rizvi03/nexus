@@ -95,6 +95,15 @@ public class TaskController {
         return ResponseEntity.ok(taskService.toggleSubtask(user, id, subtaskId));
     }
 
+    @PutMapping("/{id}/subtasks/{subtaskId}")
+    public ResponseEntity<SubtaskDto> updateSubtask(
+            @PathVariable UUID id,
+            @PathVariable UUID subtaskId,
+            @Valid @RequestBody SubtaskRequest request) {
+        User user = authService.getCurrentAuthenticatedUser();
+        return ResponseEntity.ok(taskService.updateSubtask(user, id, subtaskId, request));
+    }
+
     @DeleteMapping("/{id}/subtasks/{subtaskId}")
     public ResponseEntity<Map<String, String>> deleteSubtask(
             @PathVariable UUID id,

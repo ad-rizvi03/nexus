@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { NoteService, Note, NoteRequest, SavedResource, SavedResourceRequest, ResourceType } from '../../core/services/note.service';
 import { TaskService, Category } from '../../core/services/task.service';
+import { ConfirmDialogService } from '../../shared/confirm-dialog/confirm-dialog.service';
+import { ToastService } from '../../shared/toast/toast.service';
 
 @Component({
   selector: 'app-notes',
@@ -1107,6 +1109,8 @@ export class NotesComponent implements OnInit {
   private readonly noteService = inject(NoteService);
   private readonly taskService = inject(TaskService);
   private readonly sanitizer = inject(DomSanitizer);
+  private readonly confirmDialog = inject(ConfirmDialogService);
+  private readonly toastService = inject(ToastService);
 
   readonly activeTab = signal<'notes' | 'resources'>('notes');
   readonly viewMode = signal<'edit' | 'split' | 'preview'>('split');
@@ -1324,18 +1328,29 @@ export class NotesComponent implements OnInit {
     });
   }
 
-  deleteCurrentNote(): void {
+  async deleteCurrentNote(): Promise<void> {
     const note = this.selectedNote();
     if (!note) return;
-    if (!confirm(`Are you sure you want to delete note "${note.title}"?`)) return;
+
+    const ok = await this.confirmDialog.confirm({
+      title: 'DELETE NOTE',
+      message: `Permanently delete note "${note.title}"? This cannot be undone.`,
+      isDestructive: true,
+      confirmText: 'DELETE NOTE'
+    });
+    if (!ok) return;
 
     this.noteService.deleteNote(note.id).subscribe({
       next: () => {
         this.notes.update(prev => prev.filter(n => n.id !== note.id));
         const remaining = this.notes();
         this.selectedNote.set(remaining.length > 0 ? { ...remaining[0] } : null);
+        this.toastService.success(`Note "${note.title}" was deleted.`, 'NOTE REMOVED');
       },
-      error: (err) => console.error('Failed to delete note', err)
+      error: (err) => {
+        console.error('Failed to delete note', err);
+        this.toastService.error('Failed to delete note.');
+      }
     });
   }
 
@@ -1416,13 +1431,24 @@ export class NotesComponent implements OnInit {
     }
   }
 
-  deleteResource(id: string): void {
-    if (!confirm('Remove this saved resource?')) return;
+  async deleteResource(id: string): Promise<void> {
+    const ok = await this.confirmDialog.confirm({
+      title: 'REMOVE RESOURCE',
+      message: 'Remove this saved resource from your knowledge bookmarks?',
+      isDestructive: true,
+      confirmText: 'REMOVE'
+    });
+    if (!ok) return;
+
     this.noteService.deleteResource(id).subscribe({
       next: () => {
         this.resources.update(prev => prev.filter(r => r.id !== id));
+        this.toastService.success('Bookmark removed.', 'RESOURCE REMOVED');
       },
-      error: (err) => console.error('Failed to delete resource', err)
+      error: (err) => {
+        console.error('Failed to delete resource', err);
+        this.toastService.error('Failed to delete resource bookmark.');
+      }
     });
   }
 

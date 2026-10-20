@@ -15,9 +15,11 @@ import java.util.UUID;
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final TaskRepository taskRepository;
 
-    public CategoryService(CategoryRepository categoryRepository) {
+    public CategoryService(CategoryRepository categoryRepository, TaskRepository taskRepository) {
         this.categoryRepository = categoryRepository;
+        this.taskRepository = taskRepository;
     }
 
     @Transactional
@@ -39,6 +41,39 @@ public class CategoryService {
         Category category = new Category(user, request.name().trim(), color, request.icon(), request.sortOrder());
         category = categoryRepository.save(category);
         return CategoryDto.fromEntity(category);
+    }
+
+    @Transactional
+    public CategoryDto updateCategory(User user, UUID id, CategoryRequest request) {
+        Category category = getCategoryEntity(user, id);
+        if (!category.getName().equalsIgnoreCase(request.name().trim()) &&
+                categoryRepository.existsByUserIdAndNameIgnoreCase(user.getId(), request.name().trim())) {
+            throw new BadRequestException("Category with name '" + request.name() + "' already exists");
+        }
+
+        category.setName(request.name().trim());
+        if (request.color() != null && !request.color().isBlank()) {
+            category.setColor(request.color());
+        }
+        if (request.icon() != null) {
+            category.setIcon(request.icon());
+        }
+        category.setSortOrder(request.sortOrder());
+
+        category = categoryRepository.save(category);
+        return CategoryDto.fromEntity(category);
+    }
+
+    @Transactional
+    public void deleteCategory(User user, UUID id) {
+        Category category = getCategoryEntity(user, id);
+        // Unassign from any tasks belonging to this user
+        List<Task> tasks = taskRepository.findByCategoryId(id);
+        for (Task t : tasks) {
+            t.setCategory(null);
+        }
+        taskRepository.saveAll(tasks);
+        categoryRepository.delete(category);
     }
 
     public Category getCategoryEntity(User user, UUID id) {

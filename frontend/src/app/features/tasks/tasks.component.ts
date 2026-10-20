@@ -2,11 +2,14 @@ import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TaskService, TaskItem, Category, CreateTaskRequest, Subtask } from '../../core/services/task.service';
+import { AiCopilotModalComponent, YouTubeRecommendation } from '../../shared/ai-copilot-modal/ai-copilot-modal.component';
+import { ConfirmDialogService } from '../../shared/confirm-dialog/confirm-dialog.service';
+import { ToastService } from '../../shared/toast/toast.service';
 
 @Component({
   selector: 'app-tasks',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AiCopilotModalComponent],
   template: `
     <div class="tasks-viewport">
       <!-- Toolbar -->
@@ -46,6 +49,11 @@ import { TaskService, TaskItem, Category, CreateTaskRequest, Subtask } from '../
             class="form-input search-input font-mono"
           />
 
+          <!-- AI Copilot Button -->
+          <button type="button" class="btn btn-secondary btn-sm font-mono ai-badge-btn" (click)="openAiForNewTask()">
+            ✨ AI COPILOT
+          </button>
+
           <!-- Add Button -->
           <button type="button" class="btn btn-primary btn-sm" (click)="openCreateModal()">
             + NEW TASK
@@ -76,6 +84,9 @@ import { TaskService, TaskItem, Category, CreateTaskRequest, Subtask } from '../
               <option [value]="cat.id">{{ cat.name }}</option>
             }
           </select>
+          <button type="button" class="btn btn-secondary btn-xs font-mono ml-2" (click)="openCategoryModal()" title="Manage Categories">
+            ⚙ CATEGORIES
+          </button>
         </div>
       </div>
 
@@ -218,7 +229,12 @@ import { TaskService, TaskItem, Category, CreateTaskRequest, Subtask } from '../
           <div class="modal-card" (click)="$event.stopPropagation()">
             <div class="modal-header">
               <span class="eyebrow">{{ editingTaskId ? 'EDIT TASK SPECIFICATION' : 'CAPTURE NEW TASK' }}</span>
-              <button type="button" class="close-btn font-mono" (click)="showNewTaskModal = false">✕</button>
+              <div class="header-modal-actions">
+                <button type="button" class="btn btn-secondary btn-xs font-mono ai-badge-btn" (click)="openAiForNewTask()">
+                  ✨ ASK AI
+                </button>
+                <button type="button" class="close-btn font-mono" (click)="showNewTaskModal = false">✕</button>
+              </div>
             </div>
             <form (ngSubmit)="saveTask()">
               <div class="form-group">
@@ -265,7 +281,10 @@ import { TaskService, TaskItem, Category, CreateTaskRequest, Subtask } from '../
                   </select>
                 </div>
                 <div class="form-group flex-1">
-                  <label class="form-label font-mono">DURATION (MIN)</label>
+                  <div class="label-with-ai-link">
+                    <label class="form-label font-mono">DURATION (MIN)</label>
+                    <button type="button" class="ai-inline-btn font-mono" (click)="openAiForNewTask()">✨ AI</button>
+                  </div>
                   <input
                     type="number"
                     [(ngModel)]="taskForm.estimatedDurationMinutes"
@@ -328,6 +347,11 @@ import { TaskService, TaskItem, Category, CreateTaskRequest, Subtask } from '../
             </div>
 
             <h3 class="drawer-heading">{{ task.title }}</h3>
+            <div class="drawer-ai-deck mt-1 mb-2">
+              <button type="button" class="btn btn-secondary btn-xs font-mono ai-badge-btn" (click)="openAiForSelectedTask(task)">
+                ✨ AI TIME ESTIMATE & YOUTUBE RECOMMENDATIONS
+              </button>
+            </div>
             @if (task.description) {
               <p class="drawer-desc">{{ task.description }}</p>
             }
@@ -367,10 +391,27 @@ import { TaskService, TaskItem, Category, CreateTaskRequest, Subtask } from '../
                     <button type="button" class="subtask-check" (click)="toggleSubtask(task, sub)">
                       @if (sub.completed) { <span>✓</span> }
                     </button>
-                    <span class="subtask-text">{{ sub.title }}</span>
-                    <button type="button" class="subtask-del font-mono" (click)="deleteSubtask(task, sub)">
-                      ✕
-                    </button>
+                    @if (editingSubtaskId === sub.id) {
+                      <input
+                        type="text"
+                        [(ngModel)]="editingSubtaskTitle"
+                        class="form-input font-mono subtask-edit-input"
+                        (keyup.enter)="saveSubtaskEdit(task, sub)"
+                        (keyup.escape)="cancelEditSubtask()"
+                        placeholder="Subtask title..."
+                        autofocus
+                      />
+                      <button type="button" class="btn btn-primary btn-xs font-mono" (click)="saveSubtaskEdit(task, sub)">✓</button>
+                      <button type="button" class="btn btn-ghost btn-xs font-mono" (click)="cancelEditSubtask()">✕</button>
+                    } @else {
+                      <span class="subtask-text">{{ sub.title }}</span>
+                      <button type="button" class="subtask-action-btn font-mono" title="Edit subtask" (click)="startEditSubtask(sub)">
+                        ✎
+                      </button>
+                      <button type="button" class="subtask-del font-mono" title="Delete subtask" (click)="deleteSubtask(task, sub)">
+                        ✕
+                      </button>
+                    }
                   </div>
                 }
               </div>
@@ -401,6 +442,106 @@ import { TaskService, TaskItem, Category, CreateTaskRequest, Subtask } from '../
             </div>
           </div>
         </div>
+      }
+      <!-- Category Management Modal -->
+      @if (showCategoryModal) {
+        <div class="modal-backdrop" (click)="showCategoryModal = false">
+          <div class="modal-card category-modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <span class="eyebrow font-mono">CATEGORY CONFIGURATION</span>
+              <button type="button" class="close-btn font-mono" (click)="showCategoryModal = false">✕</button>
+            </div>
+
+            <!-- Existing Categories List -->
+            <div class="category-manager-list font-mono">
+              <div class="category-manager-header">EXISTING CATEGORIES ({{ categories().length }})</div>
+              @for (cat of categories(); track cat.id) {
+                <div class="category-manager-item">
+                  <div class="cat-pill" [style.border-color]="cat.color || '#C6A56A'">
+                    <span class="cat-dot" [style.background-color]="cat.color || '#C6A56A'"></span>
+                    <span class="cat-name">{{ cat.name }}</span>
+                    @if (cat.icon) {
+                      <span class="cat-icon text-muted text-xs">({{ cat.icon }})</span>
+                    }
+                  </div>
+                  <div class="cat-actions">
+                    <button type="button" class="btn btn-secondary btn-xs font-mono" (click)="editCategory(cat)">
+                      EDIT
+                    </button>
+                    <button type="button" class="btn btn-error btn-xs font-mono" (click)="deleteCategory(cat)">
+                      DELETE
+                    </button>
+                  </div>
+                </div>
+              }
+              @if (categories().length === 0) {
+                <div class="empty-state font-mono">No categories configured yet.</div>
+              }
+            </div>
+
+            <!-- Create / Edit Form -->
+            <form (ngSubmit)="saveCategory()" class="category-form mt-4">
+              <div class="form-title font-mono text-gold text-xs">
+                {{ editingCategoryId ? 'EDIT CATEGORY' : 'CREATE NEW CATEGORY' }}
+              </div>
+              <div class="form-row mt-2">
+                <div class="form-group flex-1">
+                  <label class="form-label font-mono">NAME</label>
+                  <input
+                    type="text"
+                    [(ngModel)]="categoryForm.name"
+                    name="catName"
+                    required
+                    class="form-input font-mono"
+                    placeholder="e.g. Engineering, Research"
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label font-mono">COLOR</label>
+                  <input
+                    type="color"
+                    [(ngModel)]="categoryForm.color"
+                    name="catColor"
+                    class="form-input color-picker-input"
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label font-mono">ICON CODE</label>
+                  <input
+                    type="text"
+                    [(ngModel)]="categoryForm.icon"
+                    name="catIcon"
+                    class="form-input font-mono"
+                    placeholder="code / book / tag"
+                    style="width: 120px;"
+                  />
+                </div>
+              </div>
+              <div class="modal-actions mt-3">
+                @if (editingCategoryId) {
+                  <button type="button" class="btn btn-ghost btn-sm font-mono" (click)="cancelCategoryEdit()">
+                    CANCEL EDIT
+                  </button>
+                }
+                <button type="submit" class="btn btn-primary btn-sm font-mono" [disabled]="!categoryForm.name.trim()">
+                  {{ editingCategoryId ? 'UPDATE CATEGORY' : '+ ADD CATEGORY' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      }
+
+      <!-- AI Copilot Modal -->
+      @if (showAiModal()) {
+        <app-ai-copilot-modal
+          [contextType]="aiContextType()"
+          [initialSubject]="aiInitialSubject()"
+          (closeModal)="showAiModal.set(false)"
+          (applyDuration)="onAiApplyDuration($event)"
+          (applySubtasks)="onAiApplySubtasks($event)"
+          (bookmarkVideo)="onAiBookmarkVideo($event)"
+        ></app-ai-copilot-modal>
       }
     </div>
   `,
@@ -835,6 +976,20 @@ import { TaskService, TaskItem, Category, CreateTaskRequest, Subtask } from '../
           font-size: 0.8rem;
           color: var(--text-primary);
         }
+        .subtask-edit-btn {
+          background: none;
+          border: none;
+          color: var(--text-muted);
+          cursor: pointer;
+          font-size: 0.8rem;
+          &:hover { color: var(--accent-gold); }
+        }
+        .subtask-edit-input {
+          flex: 1;
+          font-size: 0.75rem;
+          padding: 2px 6px;
+          height: 24px;
+        }
         .subtask-del {
           background: none;
           border: none;
@@ -858,15 +1013,112 @@ import { TaskService, TaskItem, Category, CreateTaskRequest, Subtask } from '../
         border-top: 1px solid var(--border-subtle);
       }
     }
+    .category-modal {
+      max-width: 540px;
+      width: 100%;
+      .category-manager-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: 240px;
+        overflow-y: auto;
+        padding-right: 4px;
+        .category-manager-header {
+          font-size: 0.65rem;
+          color: var(--text-muted);
+          letter-spacing: 0.1em;
+          margin-bottom: 4px;
+        }
+        .category-manager-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 8px 10px;
+          background: var(--bg-surface);
+          border: 1px solid var(--border-subtle);
+          border-radius: var(--radius-sm);
+          .cat-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            color: var(--text-primary);
+            border-left: 3px solid;
+            padding-left: 6px;
+            .cat-dot {
+              width: 8px;
+              height: 8px;
+              border-radius: 50%;
+            }
+          }
+          .cat-actions {
+            display: flex;
+            gap: 6px;
+          }
+        }
+      }
+      .color-picker-input {
+        width: 48px;
+        height: 34px;
+        padding: 2px;
+        cursor: pointer;
+      }
+    }
+    .ai-badge-btn {
+      background: linear-gradient(135deg, rgba(198, 165, 106, 0.15) 0%, rgba(229, 201, 143, 0.25) 100%);
+      border: 1px solid rgba(198, 165, 106, 0.4);
+      color: #E5C98F;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      transition: all 0.2s ease;
+      &:hover {
+        background: linear-gradient(135deg, rgba(198, 165, 106, 0.25) 0%, rgba(229, 201, 143, 0.35) 100%);
+        border-color: #C6A56A;
+        box-shadow: 0 0 12px rgba(198, 165, 106, 0.25);
+      }
+    }
+    .header-modal-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .label-with-ai-link {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+      .ai-inline-btn {
+        background: none;
+        border: none;
+        color: var(--accent-gold);
+        font-size: 0.65rem;
+        cursor: pointer;
+        padding: 0 4px;
+        letter-spacing: 0.05em;
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+    }
+    .drawer-ai-deck {
+      display: flex;
+      align-items: center;
+    }
   `]
 })
 export class TasksComponent implements OnInit {
   private readonly taskService = inject(TaskService);
+  private readonly confirmDialog = inject(ConfirmDialogService);
+  private readonly toastService = inject(ToastService);
 
   readonly tasks = signal<TaskItem[]>([]);
   readonly categories = signal<Category[]>([]);
   readonly loading = signal(true);
   readonly submitting = signal(false);
+
+  showAiModal = signal(false);
+  aiInitialSubject = signal('');
+  aiContextType = signal<'TASK' | 'ROADMAP' | 'GENERAL'>('TASK');
 
   searchQuery = '';
   selectedCategoryFilter = '';
@@ -877,6 +1129,16 @@ export class TasksComponent implements OnInit {
   editingTaskId: string | null = null;
   selectedTask = signal<TaskItem | null>(null);
   newSubtaskTitle = '';
+  editingSubtaskId: string | null = null;
+  editingSubtaskTitle = '';
+
+  showCategoryModal = false;
+  editingCategoryId: string | null = null;
+  categoryForm = {
+    name: '',
+    color: '#C6A56A',
+    icon: 'tag'
+  };
 
   taskForm: CreateTaskRequest = {
     title: '',
@@ -1051,16 +1313,27 @@ export class TasksComponent implements OnInit {
     }
   }
 
-  deleteTask(taskId: string) {
-    if (!confirm('Are you sure you want to delete this task?')) return;
+  async deleteTask(taskId: string) {
+    const ok = await this.confirmDialog.confirm({
+      title: 'DELETE TASK',
+      message: 'Are you sure you want to delete this task? This action cannot be undone.',
+      isDestructive: true,
+      confirmText: 'DELETE TASK'
+    });
+    if (!ok) return;
+
     this.taskService.deleteTask(taskId).subscribe({
       next: () => {
         this.tasks.update(all => all.filter(t => t.id !== taskId));
         if (this.selectedTask()?.id === taskId) {
           this.selectedTask.set(null);
         }
+        this.toastService.success('Task permanently removed from workspace.', 'TASK DELETED');
       },
-      error: (err) => console.error('Failed to delete task', err)
+      error: (err) => {
+        console.error('Failed to delete task', err);
+        this.toastService.error('Failed to delete task.');
+      }
     });
   }
 
@@ -1107,6 +1380,97 @@ export class TasksComponent implements OnInit {
     });
   }
 
+  startEditSubtask(sub: Subtask) {
+    this.editingSubtaskId = sub.id;
+    this.editingSubtaskTitle = sub.title;
+  }
+
+  cancelEditSubtask() {
+    this.editingSubtaskId = null;
+    this.editingSubtaskTitle = '';
+  }
+
+  saveSubtaskEdit(task: TaskItem, sub: Subtask) {
+    if (!this.editingSubtaskTitle.trim()) return;
+    this.taskService.updateSubtask(task.id, sub.id, this.editingSubtaskTitle.trim()).subscribe({
+      next: (updatedSub) => {
+        const updatedSubtasks = task.subtasks.map(s => s.id === sub.id ? updatedSub : s);
+        const updatedTask = { ...task, subtasks: updatedSubtasks };
+        this.tasks.update(all => all.map(t => t.id === task.id ? updatedTask : t));
+        this.selectedTask.set(updatedTask);
+        this.cancelEditSubtask();
+      },
+      error: (err) => console.error('Failed to update subtask', err)
+    });
+  }
+
+  openCategoryModal() {
+    this.showCategoryModal = true;
+    this.editingCategoryId = null;
+    this.categoryForm = { name: '', color: '#C6A56A', icon: 'tag' };
+  }
+
+  editCategory(cat: Category) {
+    this.editingCategoryId = cat.id;
+    this.categoryForm = {
+      name: cat.name,
+      color: cat.color || '#C6A56A',
+      icon: cat.icon || 'tag'
+    };
+  }
+
+  cancelCategoryEdit() {
+    this.editingCategoryId = null;
+    this.categoryForm = { name: '', color: '#C6A56A', icon: 'tag' };
+  }
+
+  saveCategory() {
+    if (!this.categoryForm.name.trim()) return;
+    if (this.editingCategoryId) {
+      this.taskService.updateCategory(this.editingCategoryId, this.categoryForm).subscribe({
+        next: (updated) => {
+          this.categories.update(all => all.map(c => c.id === updated.id ? updated : c));
+          this.cancelCategoryEdit();
+          this.loadTasks();
+        },
+        error: (err) => console.error('Failed to update category', err)
+      });
+    } else {
+      this.taskService.createCategory(this.categoryForm).subscribe({
+        next: (created) => {
+          this.categories.update(all => [...all, created]);
+          this.cancelCategoryEdit();
+        },
+        error: (err) => console.error('Failed to create category', err)
+      });
+    }
+  }
+
+  async deleteCategory(cat: Category) {
+    const ok = await this.confirmDialog.confirm({
+      title: 'DELETE CATEGORY',
+      message: `Permanently delete category "${cat.name}"? Tasks assigned to this category will become unassigned.`,
+      isDestructive: true,
+      confirmText: 'DELETE CATEGORY'
+    });
+    if (!ok) return;
+
+    this.taskService.deleteCategory(cat.id).subscribe({
+      next: () => {
+        this.categories.update(all => all.filter(c => c.id !== cat.id));
+        if (this.editingCategoryId === cat.id) {
+          this.cancelCategoryEdit();
+        }
+        this.loadTasks();
+        this.toastService.success(`Category "${cat.name}" deleted.`, 'CATEGORY DELETED');
+      },
+      error: (err) => {
+        console.error('Failed to delete category', err);
+        this.toastService.error('Failed to delete category.');
+      }
+    });
+  }
+
   getCompletedSubtaskCount(task: TaskItem): number {
     return (task.subtasks || []).filter(s => s.completed).length;
   }
@@ -1131,6 +1495,66 @@ export class TasksComponent implements OnInit {
       case 'IN_PROGRESS': return 'badge-gold';
       case 'BLOCKED': return 'badge-error';
       default: return 'badge-neutral';
+    }
+  }
+
+  openAiForNewTask() {
+    this.aiContextType.set('TASK');
+    this.aiInitialSubject.set(this.taskForm.title || '');
+    this.showAiModal.set(true);
+  }
+
+  openAiForSelectedTask(task: TaskItem) {
+    this.aiContextType.set('TASK');
+    this.aiInitialSubject.set(task.title);
+    this.showAiModal.set(true);
+  }
+
+  onAiApplyDuration(minutes: number) {
+    this.taskForm.estimatedDurationMinutes = minutes;
+    const task = this.selectedTask();
+    if (task) {
+      this.taskService.updateTask(task.id, { estimatedDurationMinutes: minutes }).subscribe({
+        next: (updated) => {
+          this.selectedTask.set(updated);
+          this.tasks.update(all => all.map(t => t.id === updated.id ? updated : t));
+        }
+      });
+    }
+  }
+
+  onAiApplySubtasks(subtasks: string[]) {
+    const task = this.selectedTask();
+    if (task) {
+      subtasks.forEach(title => {
+        this.taskService.addSubtask(task.id, title).subscribe({
+          next: (created: Subtask) => {
+            task.subtasks.push(created);
+            this.tasks.update(all => all.map(t => t.id === task.id ? { ...task } : t));
+          }
+        });
+      });
+    } else {
+      const bulletPoints = subtasks.map(s => `• ${s}`).join('\n');
+      this.taskForm.description = this.taskForm.description
+        ? `${this.taskForm.description}\n\nKey Subtasks:\n${bulletPoints}`
+        : `Key Subtasks:\n${bulletPoints}`;
+    }
+  }
+
+  onAiBookmarkVideo(video: YouTubeRecommendation) {
+    const videoNote = `\n\n📌 Recommended Tutorial: [${video.title}](${video.url}) (${video.channel} - ${video.duration})`;
+    const task = this.selectedTask();
+    if (task) {
+      const newDesc = (task.description || '') + videoNote;
+      this.taskService.updateTask(task.id, { description: newDesc }).subscribe({
+        next: (updated) => {
+          this.selectedTask.set(updated);
+          this.tasks.update(all => all.map(t => t.id === updated.id ? updated : t));
+        }
+      });
+    } else {
+      this.taskForm.description = (this.taskForm.description || '') + videoNote;
     }
   }
 }

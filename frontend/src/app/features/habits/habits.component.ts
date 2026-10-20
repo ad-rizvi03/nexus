@@ -2,6 +2,8 @@ import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HabitService, Habit, HabitSummary, HabitRequest, HabitFrequency } from '../../core/services/habit.service';
+import { ConfirmDialogService } from '../../shared/confirm-dialog/confirm-dialog.service';
+import { ToastService } from '../../shared/toast/toast.service';
 
 interface TimelineDay {
   dateStr: string;
@@ -688,6 +690,8 @@ interface TimelineDay {
 })
 export class HabitsComponent implements OnInit {
   private readonly habitService = inject(HabitService);
+  private readonly confirmDialog = inject(ConfirmDialogService);
+  private readonly toastService = inject(ToastService);
 
   readonly habits = signal<Habit[]>([]);
   readonly filterMode = signal<'active' | 'all' | 'paused'>('active');
@@ -801,15 +805,25 @@ export class HabitsComponent implements OnInit {
     });
   }
 
-  deleteHabit(habit: Habit): void {
-    if (!confirm(`Are you sure you want to delete habit "${habit.name}"?`)) return;
+  async deleteHabit(habit: Habit): Promise<void> {
+    const ok = await this.confirmDialog.confirm({
+      title: 'DELETE HABIT',
+      message: `Permanently delete habit "${habit.name}" and all historical completion tracking?`,
+      isDestructive: true,
+      confirmText: 'DELETE HABIT'
+    });
+    if (!ok) return;
 
     this.habitService.deleteHabit(habit.id).subscribe({
       next: () => {
         this.habits.update(prev => prev.filter(h => h.id !== habit.id));
         this.recalculateSummary();
+        this.toastService.success(`Habit "${habit.name}" deleted.`, 'HABIT REMOVED');
       },
-      error: (err) => console.error('Failed to delete habit', err)
+      error: (err) => {
+        console.error('Failed to delete habit', err);
+        this.toastService.error('Failed to delete habit.');
+      }
     });
   }
 

@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { FocusService, FocusSession, FocusSummary, StartSessionRequest, ManualSessionRequest, SessionType } from '../../core/services/focus.service';
 import { TaskService, TaskItem } from '../../core/services/task.service';
 import { LearningService, Roadmap } from '../../core/services/learning.service';
+import { ConfirmDialogService } from '../../shared/confirm-dialog/confirm-dialog.service';
+import { ToastService } from '../../shared/toast/toast.service';
 
 interface PresetMode {
   label: string;
@@ -700,6 +702,8 @@ export class FocusComponent implements OnInit, OnDestroy {
   private readonly focusService = inject(FocusService);
   private readonly taskService = inject(TaskService);
   private readonly learningService = inject(LearningService);
+  private readonly confirmDialog = inject(ConfirmDialogService);
+  private readonly toastService = inject(ToastService);
 
   readonly presets: PresetMode[] = [
     { label: '25m FOCUS', minutes: 25, type: 'POMODORO', isBreak: false },
@@ -988,11 +992,24 @@ export class FocusComponent implements OnInit, OnDestroy {
     });
   }
 
-  deleteSession(id: string): void {
-    if (!confirm('Delete this logged focus session?')) return;
+  async deleteSession(id: string): Promise<void> {
+    const ok = await this.confirmDialog.confirm({
+      title: 'DELETE FOCUS LOG',
+      message: 'Delete this logged focus session record?',
+      isDestructive: true,
+      confirmText: 'DELETE RECORD'
+    });
+    if (!ok) return;
+
     this.focusService.deleteSession(id).subscribe({
-      next: () => this.loadSummaryAndRecoverSession(),
-      error: (err) => console.error('Failed to delete session', err)
+      next: () => {
+        this.loadSummaryAndRecoverSession();
+        this.toastService.success('Session record deleted.', 'RECORD DELETED');
+      },
+      error: (err) => {
+        console.error('Failed to delete session', err);
+        this.toastService.error('Failed to delete focus session.');
+      }
     });
   }
 

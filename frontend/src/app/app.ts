@@ -5,12 +5,26 @@ import { filter } from 'rxjs';
 import { SidebarComponent } from './layout/sidebar/sidebar.component';
 import { TopbarComponent } from './layout/topbar/topbar.component';
 import { CommandPaletteComponent } from './layout/command-palette/command-palette.component';
+import { QuickCaptureComponent } from './layout/quick-capture/quick-capture.component';
+import { AiCopilotModalComponent } from './shared/ai-copilot-modal/ai-copilot-modal.component';
+import { ToastContainerComponent } from './shared/toast/toast-container.component';
+import { ConfirmDialogComponent } from './shared/confirm-dialog/confirm-dialog.component';
 import { AuthService } from './core/auth/auth.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, SidebarComponent, TopbarComponent, CommandPaletteComponent],
+  imports: [
+    CommonModule,
+    RouterOutlet,
+    SidebarComponent,
+    TopbarComponent,
+    CommandPaletteComponent,
+    QuickCaptureComponent,
+    AiCopilotModalComponent,
+    ToastContainerComponent,
+    ConfirmDialogComponent
+  ],
   template: `
     @if (authService.isAuthenticated() && !isLoginRoute()) {
       <div class="app-layout">
@@ -22,6 +36,7 @@ import { AuthService } from './core/auth/auth.service';
           <!-- Topbar -->
           <app-topbar
             (openCommandPalette)="showCommandPalette.set(true)"
+            (openAiCopilot)="showAiCopilot.set(true)"
             (quickAdd)="handleQuickAdd()"
           ></app-topbar>
 
@@ -38,11 +53,30 @@ import { AuthService } from './core/auth/auth.service';
             (triggerQuickAdd)="handleQuickAdd()"
           ></app-command-palette>
         }
+
+        <!-- Universal Quick Capture Modal -->
+        @if (showQuickCapture()) {
+          <app-quick-capture
+            (closeCapture)="showQuickCapture.set(false)"
+          ></app-quick-capture>
+        }
+
+        <!-- Universal AI Copilot Modal -->
+        @if (showAiCopilot()) {
+          <app-ai-copilot-modal
+            [contextType]="'GENERAL'"
+            (closeModal)="showAiCopilot.set(false)"
+          ></app-ai-copilot-modal>
+        }
       </div>
     } @else {
       <!-- Login / Registration Standalone Viewport -->
       <router-outlet></router-outlet>
     }
+
+    <!-- Universal Overlays: Toasts and Confirm Dialog -->
+    <app-toast-container></app-toast-container>
+    <app-confirm-dialog></app-confirm-dialog>
   `,
   styleUrl: './app.scss'
 })
@@ -51,6 +85,8 @@ export class App {
   private readonly router = inject(Router);
 
   showCommandPalette = signal(false);
+  showQuickCapture = signal(false);
+  showAiCopilot = signal(false);
   isLoginRoute = signal(false);
 
   constructor() {
@@ -70,10 +106,16 @@ export class App {
         this.showCommandPalette.update(v => !v);
       }
     }
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'j') {
+      event.preventDefault();
+      if (this.authService.isAuthenticated()) {
+        this.showAiCopilot.update(v => !v);
+      }
+    }
   }
 
   handleQuickAdd() {
     this.showCommandPalette.set(false);
-    this.router.navigate(['/tasks']);
+    this.showQuickCapture.set(true);
   }
 }

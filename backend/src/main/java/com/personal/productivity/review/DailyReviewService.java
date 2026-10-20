@@ -233,4 +233,11 @@ public class DailyReviewService {
                 .map(DailyReviewDto::fromEntity)
                 .toList();
     }
+
+    @Transactional
+    public void deleteDailyReview(UUID userId, UUID id) {
+        DailyReview review = dailyReviewRepository.findByIdAndUserId(id, userId)
+                .orElseThrow(() -> new com.personal.productivity.common.ResourceNotFoundException("Daily review not found: " + id));
+        dailyReviewRepository.delete(review);
+    }
 }

@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GoalService, Goal, GoalMilestone, GoalSummary, GoalRequest, GoalMilestoneRequest, GoalStatus, ScheduleHealth } from '../../core/services/goal.service';
 import { TaskService, Category } from '../../core/services/task.service';
+import { ConfirmDialogService } from '../../shared/confirm-dialog/confirm-dialog.service';
+import { ToastService } from '../../shared/toast/toast.service';
 
 @Component({
   selector: 'app-goals',
@@ -198,6 +200,14 @@ import { TaskService, Category } from '../../core/services/task.service';
                         }
                         <button
                           type="button"
+                          class="ms-action-btn font-mono"
+                          (click)="openEditMilestone(goal, ms)"
+                          title="Edit Milestone"
+                        >
+                          ✎
+                        </button>
+                        <button
+                          type="button"
                           class="ms-del-btn"
                           (click)="deleteMilestone(goal, ms.id)"
                           title="Delete Milestone"
@@ -347,12 +357,12 @@ import { TaskService, Category } from '../../core/services/task.service';
         </div>
       }
 
-      <!-- Quick Add Milestone Inline Prompt Modal -->
+      <!-- Quick Add / Edit Milestone Inline Prompt Modal -->
       @if (showQuickMilestoneModal()) {
         <div class="modal-backdrop">
           <div class="modal-dialog modal-sm">
             <div class="modal-header">
-              <h3 class="font-sans">ADD MILESTONE</h3>
+              <h3 class="font-sans">{{ editingMilestoneId ? 'EDIT MILESTONE' : 'ADD MILESTONE' }}</h3>
               <button type="button" class="close-btn" (click)="closeQuickMilestoneModal()">✕</button>
             </div>
             <div class="modal-body">
@@ -365,6 +375,14 @@ import { TaskService, Category } from '../../core/services/task.service';
                   placeholder="e.g. Deploy High-Availability Cluster"
                 />
               </div>
+              <div class="form-group">
+                <label class="form-label font-mono">TARGET DATE (OPTIONAL)</label>
+                <input
+                  type="date"
+                  class="form-input font-mono"
+                  [(ngModel)]="quickMilestoneTargetDate"
+                />
+              </div>
             </div>
             <div class="modal-footer font-mono">
               <button type="button" class="btn btn-secondary" (click)="closeQuickMilestoneModal()">CANCEL</button>
@@ -374,7 +392,7 @@ import { TaskService, Category } from '../../core/services/task.service';
                 [disabled]="!quickMilestoneTitle.trim()"
                 (click)="submitQuickMilestone()"
               >
-                ADD
+                {{ editingMilestoneId ? 'UPDATE' : 'ADD' }}
               </button>
             </div>
           </div>
@@ -647,6 +665,16 @@ import { TaskService, Category } from '../../core/services/task.service';
       font-size: 0.65rem;
       white-space: nowrap;
     }
+    .ms-action-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.75rem;
+      padding: 0 4px;
+      opacity: 0.6;
+      &:hover { opacity: 1; color: var(--accent-gold); }
+    }
     .ms-del-btn {
       background: transparent;
       border: none;
@@ -801,6 +829,8 @@ import { TaskService, Category } from '../../core/services/task.service';
 export class GoalsComponent implements OnInit {
   private readonly goalService = inject(GoalService);
   private readonly taskService = inject(TaskService);
+  private readonly confirmDialog = inject(ConfirmDialogService);
+  private readonly toastService = inject(ToastService);
 
   readonly goals = signal<Goal[]>([]);
   readonly categories = signal<Category[]>([]);
@@ -833,6 +863,8 @@ export class GoalsComponent implements OnInit {
   readonly showQuickMilestoneModal = signal<boolean>(false);
   quickMilestoneTargetGoal: Goal | null = null;
   quickMilestoneTitle: string = '';
+  quickMilestoneTargetDate: string | null = null;
+  editingMilestoneId: string | null = null;
 
   readonly displayedGoals = computed(() => {
     const list = this.goals();
@@ -908,31 +940,59 @@ export class GoalsComponent implements OnInit {
   }
 
   openAddMilestoneRow(goal: Goal): void {
+    this.editingMilestoneId = null;
     this.quickMilestoneTargetGoal = goal;
     this.quickMilestoneTitle = '';
+    this.quickMilestoneTargetDate = null;
+    this.showQuickMilestoneModal.set(true);
+  }
+
+  openEditMilestone(goal: Goal, ms: GoalMilestone): void {
+    this.editingMilestoneId = ms.id;
+    this.quickMilestoneTargetGoal = goal;
+    this.quickMilestoneTitle = ms.title;
+    this.quickMilestoneTargetDate = ms.targetDate ? ms.targetDate.substring(0, 10) : null;
     this.showQuickMilestoneModal.set(true);
   }
 
   closeQuickMilestoneModal(): void {
     this.showQuickMilestoneModal.set(false);
     this.quickMilestoneTargetGoal = null;
+    this.editingMilestoneId = null;
+    this.quickMilestoneTitle = '';
+    this.quickMilestoneTargetDate = null;
   }
 
   submitQuickMilestone(): void {
     const goal = this.quickMilestoneTargetGoal;
     if (!goal || !this.quickMilestoneTitle.trim()) return;
 
-    this.goalService.addMilestone(goal.id, {
-      title: this.quickMilestoneTitle.trim(),
-      completed: false
-    }).subscribe({
-      next: (updatedGoal) => {
-        this.goals.update(prev => prev.map(g => g.id === updatedGoal.id ? updatedGoal : g));
-        this.recalculateSummaryMetrics();
-        this.closeQuickMilestoneModal();
-      },
-      error: (err) => console.error('Failed to add milestone', err)
-    });
+    if (this.editingMilestoneId) {
+      this.goalService.updateMilestone(goal.id, this.editingMilestoneId, {
+        title: this.quickMilestoneTitle.trim(),
+        targetDate: this.quickMilestoneTargetDate || undefined
+      }).subscribe({
+        next: (updatedGoal) => {
+          this.goals.update(prev => prev.map(g => g.id === updatedGoal.id ? updatedGoal : g));
+          this.recalculateSummaryMetrics();
+          this.closeQuickMilestoneModal();
+        },
+        error: (err) => console.error('Failed to update milestone', err)
+      });
+    } else {
+      this.goalService.addMilestone(goal.id, {
+        title: this.quickMilestoneTitle.trim(),
+        targetDate: this.quickMilestoneTargetDate || undefined,
+        completed: false
+      }).subscribe({
+        next: (updatedGoal) => {
+          this.goals.update(prev => prev.map(g => g.id === updatedGoal.id ? updatedGoal : g));
+          this.recalculateSummaryMetrics();
+          this.closeQuickMilestoneModal();
+        },
+        error: (err) => console.error('Failed to add milestone', err)
+      });
+    }
   }
 
   openAddModal(): void {
@@ -1012,15 +1072,25 @@ export class GoalsComponent implements OnInit {
     }
   }
 
-  deleteGoal(goal: Goal): void {
-    if (!confirm(`Are you sure you want to delete strategic goal "${goal.name}"?`)) return;
+  async deleteGoal(goal: Goal): Promise<void> {
+    const ok = await this.confirmDialog.confirm({
+      title: 'DELETE GOAL',
+      message: `Permanently delete strategic goal "${goal.name}" and all tracked milestones?`,
+      isDestructive: true,
+      confirmText: 'DELETE GOAL'
+    });
+    if (!ok) return;
 
     this.goalService.deleteGoal(goal.id).subscribe({
       next: () => {
         this.goals.update(prev => prev.filter(g => g.id !== goal.id));
         this.recalculateSummaryMetrics();
+        this.toastService.success(`Goal "${goal.name}" deleted.`, 'GOAL REMOVED');
       },
-      error: (err) => console.error('Failed to delete goal', err)
+      error: (err) => {
+        console.error('Failed to delete goal', err);
+        this.toastService.error('Failed to delete strategic goal.');
+      }
     });
   }
 

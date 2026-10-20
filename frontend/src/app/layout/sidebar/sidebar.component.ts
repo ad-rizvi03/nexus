@@ -21,40 +21,38 @@ interface NavItem {
       <!-- Brand Header -->
       <div class="brand">
         <div class="logo-mark">
-          <svg viewBox="0 0 40 40" width="24" height="24">
+          <svg viewBox="0 0 48 48" width="26" height="26" fill="none">
             <defs>
-              <linearGradient id="brand-gold" x1="0" y1="0" x2="1" y2="1">
+              <linearGradient id="brand-gold-grad" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stop-color="#F4E2B2" />
                 <stop offset="50%" stop-color="#E8B86A" />
                 <stop offset="100%" stop-color="#C6A56A" />
               </linearGradient>
             </defs>
-            <circle cx="20" cy="20" r="18" fill="none" stroke="url(#brand-gold)" stroke-width="1.5" opacity="0.45" />
-            <path d="M6 26 A 14 14 0 0 1 34 26" fill="none" stroke="url(#brand-gold)" stroke-width="2.25" stroke-linecap="round" />
-            <circle cx="20" cy="20" r="2.6" fill="url(#brand-gold)" />
-            <line x1="20" y1="20" x2="30" y2="10" stroke="url(#brand-gold)" stroke-width="1.75" stroke-linecap="round" />
+            <rect x="3" y="3" width="42" height="42" rx="10" fill="#14171D" stroke="url(#brand-gold-grad)" stroke-width="2" />
+            <path d="M15 33V15L33 33V15" stroke="url(#brand-gold-grad)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
         </div>
         <div class="brand-text">
-          <span class="brand-name">ARCLIGHT</span>
-          <span class="brand-sub">OPERATIONS</span>
+          <span class="brand-name font-sans">NEXUS</span>
+          <span class="brand-sub font-mono">WORKSPACE</span>
         </div>
       </div>
 
       <!-- Context Tag -->
       <div class="badge-container">
-        <span class="badge badge-gold">FILE · 001 · PRODUCTIVITY</span>
+        <span class="badge badge-gold font-mono">PERSONAL PRODUCTIVITY OS</span>
       </div>
 
-      <!-- Authenticated Operator Info -->
+      <!-- Authenticated User Profile -->
       @if (authService.currentUser(); as user) {
-        <div class="operator-profile-card">
-          <div class="operator-avatar font-mono">
+        <div class="user-profile-card">
+          <div class="user-avatar font-mono">
             {{ getInitials(user.displayName) }}
           </div>
-          <div class="operator-info">
-            <span class="operator-name">{{ user.displayName }}</span>
-            <span class="operator-email font-mono">{{ user.email }}</span>
+          <div class="user-info">
+            <span class="user-name">{{ user.displayName }}</span>
+            <span class="user-email font-mono">{{ user.email }}</span>
           </div>
           <button type="button" class="btn-logout font-mono" (click)="authService.logout().subscribe()" title="Sign Out">
             ⎋
@@ -64,7 +62,7 @@ interface NavItem {
 
       <!-- Navigation Links -->
       <nav class="nav-menu">
-        <div class="nav-section-label">COMMAND & WORKSPACE</div>
+        <div class="nav-section-label">WORKSPACE MODULES</div>
         @for (item of mainNav; track item.route) {
           <a
             [routerLink]="item.route"
@@ -114,8 +112,8 @@ interface NavItem {
             </span>
           </div>
           <div class="telemetry-row">
-            <span class="telemetry-label">PORT</span>
-            <span class="telemetry-val font-mono">8081 / 4201</span>
+            <span class="telemetry-label">PLATFORM</span>
+            <span class="telemetry-val font-mono">v2.4 PRO</span>
           </div>
         </div>
       </div>
@@ -146,7 +144,7 @@ export class SidebarComponent {
   ];
 
   getInitials(name: string): string {
-    if (!name) return 'OP';
+    if (!name) return 'US';
     const parts = name.trim().split(' ');
     if (parts.length >= 2) {
       return (parts[0][0] + parts[1][0]).toUpperCase();

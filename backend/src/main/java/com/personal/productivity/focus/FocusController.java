@@ -63,6 +63,14 @@ public class FocusController {
         return ResponseEntity.status(HttpStatus.CREATED).body(focusService.createManualEntry(user.getId(), request));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<FocusSessionDto.Response> updateSession(
+            @PathVariable UUID id,
+            @Valid @RequestBody FocusSessionDto.ManualRequest request) {
+        User user = authService.getCurrentAuthenticatedUser();
+        return ResponseEntity.ok(focusService.updateSession(user.getId(), id, request));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSession(@PathVariable UUID id) {
         User user = authService.getCurrentAuthenticatedUser();

@@ -7,7 +7,7 @@ spring:
   application:
     name: productivity-app
   datasource:
-    url: jdbc:postgresql://localhost:5432/myapplication_db
+    url: jdbc:postgresql://localhost:5432/nexus
     username: postgres
     password: root
     driver-class-name: org.postgresql.Driver
@@ -44,3 +44,7 @@ management:
   endpoint:
     health:
       show-details: always
+
+gemini:
+  api-key: ${GEMINI_API_KEY:AIzaSyAr4GknSEhF61h2Q-_--pV9Alm8XwKVAaE}
+  model: ${GEMINI_MODEL:gemini-3.5-flash-lite}

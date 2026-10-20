@@ -12,7 +12,7 @@ The Personal Productivity Web Application is a modular monolith designed for a w
   - Context path / API prefix: `/api/v1`
 - **Database**: PostgreSQL 18 (Relational, Flyway schema migrations, UTC timestamps, UUID primary keys)
   - Host: `localhost:5432`
-  - Database: `myapplication_db`
+  - Database: `nexus`
 
 ---
 

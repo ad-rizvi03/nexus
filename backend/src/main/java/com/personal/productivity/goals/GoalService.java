@@ -257,6 +257,35 @@ public class GoalService {
     }
 
     @Transactional
+    public GoalDto.Response updateMilestone(UUID userId, UUID goalId, UUID milestoneId, GoalMilestoneDto.Request req) {
+        Goal goal = goalRepository.findByIdAndUserIdWithMilestones(goalId, userId)
+                .orElseThrow(() -> new NoSuchElementException("Goal not found: " + goalId));
+
+        GoalMilestone milestone = goal.getMilestones().stream()
+                .filter(m -> m.getId().equals(milestoneId))
+                .findFirst()
+                .orElseThrow(() -> new NoSuchElementException("Milestone not found: " + milestoneId));
+
+        milestone.setTitle(req.title().trim());
+        if (req.targetDate() != null) {
+            milestone.setTargetDate(req.targetDate());
+        }
+        if (req.completed() != null) {
+            milestone.setCompleted(req.completed());
+            if (Boolean.TRUE.equals(req.completed()) && milestone.getCompletedAt() == null) {
+                milestone.setCompletedAt(java.time.Instant.now());
+            }
+        }
+        if (req.sortOrder() != null) {
+            milestone.setSortOrder(req.sortOrder());
+        }
+
+        calculateGoalProgress(goal);
+        Goal saved = goalRepository.save(goal);
+        return toGoalResponse(saved);
+    }
+
+    @Transactional
     public GoalDto.Response addMilestone(UUID userId, UUID goalId, GoalMilestoneDto.Request req) {
         Goal goal = goalRepository.findByIdAndUserIdWithMilestones(goalId, userId)
                 .orElseThrow(() -> new NoSuchElementException("Goal not found: " + goalId));

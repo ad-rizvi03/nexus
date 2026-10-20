@@ -14,24 +14,30 @@ import { AuthService } from '../../core/auth/auth.service';
         <!-- Brand Header -->
         <div class="auth-header">
           <div class="logo-mark">
-            <svg viewBox="0 0 40 40" width="32" height="32">
+            <svg viewBox="0 0 48 48" width="44" height="44" fill="none">
               <defs>
-                <linearGradient id="auth-gold" x1="0" y1="0" x2="1" y2="1">
+                <linearGradient id="nexus-gold-grad" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stop-color="#F4E2B2" />
                   <stop offset="50%" stop-color="#E8B86A" />
                   <stop offset="100%" stop-color="#C6A56A" />
                 </linearGradient>
+                <filter id="nexus-glow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="rgba(198, 165, 106, 0.35)" />
+                </filter>
               </defs>
-              <circle cx="20" cy="20" r="18" fill="none" stroke="url(#auth-gold)" stroke-width="1.5" opacity="0.45" />
-              <path d="M6 26 A 14 14 0 0 1 34 26" fill="none" stroke="url(#auth-gold)" stroke-width="2.25" stroke-linecap="round" />
-              <circle cx="20" cy="20" r="2.6" fill="url(#auth-gold)" />
-              <line x1="20" y1="20" x2="30" y2="10" stroke="url(#auth-gold)" stroke-width="1.75" stroke-linecap="round" />
+              <rect x="3" y="3" width="42" height="42" rx="12" fill="#14171D" stroke="url(#nexus-gold-grad)" stroke-width="1.5" filter="url(#nexus-glow)" />
+              <path d="M15 33V15L33 33V15" stroke="url(#nexus-gold-grad)" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
           </div>
-          <span class="eyebrow">ARCLIGHT OPERATIONS CONSOLE</span>
-          <h1 class="auth-title font-serif">{{ isRegisterMode() ? 'Create Operator Account' : 'Operator Access' }}</h1>
+          <div class="brand-pill font-mono">
+            <span class="brand-dot"></span>
+            NEXUS WORKSPACE
+          </div>
+          <h1 class="auth-title font-sans">
+            {{ isRegisterMode() ? 'Create an account' : 'Welcome back' }}
+          </h1>
           <p class="auth-subtitle font-sans text-secondary text-sm">
-            {{ isRegisterMode() ? 'Register your private local workspace.' : 'Authenticate your personal session.' }}
+            {{ isRegisterMode() ? 'Set up your personal workspace and start organizing your goals.' : 'Enter your credentials to access your workspace.' }}
           </p>
         </div>
 
@@ -40,7 +46,7 @@ import { AuthService } from '../../core/auth/auth.service';
           <div class="active-session-banner font-mono">
             <div class="session-info">
               <span class="session-dot"></span>
-              <span class="session-label">ACTIVE OPERATOR SESSION</span>
+              <span class="session-label">SIGNED IN AS</span>
             </div>
             <div class="session-details">
               <strong>{{ authService.currentUser()?.displayName }}</strong>
@@ -48,7 +54,7 @@ import { AuthService } from '../../core/auth/auth.service';
             </div>
             <div class="session-actions">
               <button type="button" class="btn btn-primary btn-sm" (click)="goToDashboard()">
-                RETURN TO DASHBOARD →
+                CONTINUE TO WORKSPACE →
               </button>
               <button type="button" class="btn-logout-link" (click)="signOut()">
                 SIGN OUT
@@ -88,33 +94,33 @@ import { AuthService } from '../../core/auth/auth.service';
         <form (ngSubmit)="submitForm()" class="auth-form">
           @if (isRegisterMode()) {
             <div class="form-group">
-              <label class="form-label font-mono">Operator Display Name</label>
+              <label class="form-label font-mono">FULL NAME</label>
               <input
                 type="text"
                 [(ngModel)]="displayName"
                 name="displayName"
                 required
                 class="form-input"
-                placeholder="e.g. Adnan Rizvi"
+                placeholder="e.g. S M Adnan Rizvi"
               />
             </div>
           }
 
           <div class="form-group">
-            <label class="form-label font-mono">Email Address</label>
+            <label class="form-label font-mono">EMAIL ADDRESS</label>
             <input
               type="email"
               [(ngModel)]="email"
               name="email"
               required
               class="form-input"
-              placeholder="operator@local.dev"
+              placeholder="name@example.com"
             />
           </div>
 
           <div class="form-group">
             <div class="label-row">
-              <label class="form-label font-mono">Secret Password</label>
+              <label class="form-label font-mono">PASSWORD</label>
               <button
                 type="button"
                 class="toggle-pwd-btn font-mono"
@@ -129,26 +135,26 @@ import { AuthService } from '../../core/auth/auth.service';
               name="password"
               required
               class="form-input"
-              placeholder="Minimum 8 characters"
+              placeholder="••••••••••••"
             />
           </div>
 
           <button
             type="submit"
-            class="btn btn-primary w-full submit-btn"
+            class="btn btn-primary w-full submit-btn font-mono"
             [disabled]="isLoading()"
           >
             @if (isLoading()) {
               <span>AUTHENTICATING...</span>
             } @else {
-              <span>{{ isRegisterMode() ? 'INITIALIZE ACCOUNT' : 'ENTER COMMAND CENTER' }} →</span>
+              <span>{{ isRegisterMode() ? 'CREATE ACCOUNT' : 'SIGN IN' }} →</span>
             }
           </button>
         </form>
 
         <!-- Footer Notice -->
         <div class="auth-footer font-mono">
-          <span>PORT 8081 / 4201 · HTTP-ONLY SESSION PERSISTENCE</span>
+          <span>🔒 SECURE LOCAL WORKSPACE · NEXUS v1.0</span>
         </div>
       </div>
     </div>
@@ -172,17 +178,52 @@ import { AuthService } from '../../core/auth/auth.service';
       display: flex;
       flex-direction: column;
       gap: 20px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75), 0 0 1px rgba(198, 165, 106, 0.25);
     }
     .auth-header {
       display: flex;
       flex-direction: column;
       align-items: center;
       text-align: center;
-      gap: 6px;
-      .logo-mark { margin-bottom: 8px; }
-      .auth-title { font-size: 1.65rem; color: var(--text-primary); margin-top: 4px; }
-      .auth-subtitle { color: var(--text-secondary); }
+      gap: 8px;
+      .logo-mark {
+        margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .brand-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.65rem;
+        letter-spacing: 0.2em;
+        color: var(--accent-gold);
+        background: rgba(198, 165, 106, 0.08);
+        border: 1px solid rgba(198, 165, 106, 0.25);
+        border-radius: var(--radius-full);
+        padding: 4px 12px;
+        font-weight: 600;
+        .brand-dot {
+          width: 5px;
+          height: 5px;
+          border-radius: 50%;
+          background: var(--accent-gold);
+        }
+      }
+      .auth-title {
+        font-family: var(--font-sans);
+        font-size: 1.8rem;
+        font-weight: 700;
+        letter-spacing: -0.025em;
+        color: var(--text-primary);
+        margin-top: 2px;
+      }
+      .auth-subtitle {
+        color: var(--text-secondary);
+        max-width: 320px;
+        line-height: 1.45;
+      }
     }
     .tab-strip {
       display: flex;
@@ -307,8 +348,8 @@ export class LoginComponent {
   isLoading = signal(false);
   errorMessage = signal<string | null>(null);
 
-  email = 'operator@local.dev';
-  password = 'NewSecurePassword456!';
+  email = '';
+  password = '';
   displayName = '';
 
   goToDashboard() {
@@ -322,9 +363,6 @@ export class LoginComponent {
   setMode(register: boolean) {
     this.isRegisterMode.set(register);
     this.errorMessage.set(null);
-    if (register && !this.displayName) {
-      this.displayName = 'Operator One';
-    }
   }
 
   submitForm() {

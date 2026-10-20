@@ -87,6 +87,14 @@ export class TaskService {
     return this.http.post<Category>(`${this.baseUrl}/categories`, request, { withCredentials: true });
   }
 
+  updateCategory(id: string, request: CategoryRequest): Observable<Category> {
+    return this.http.put<Category>(`${this.baseUrl}/categories/${id}`, request, { withCredentials: true });
+  }
+
+  deleteCategory(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/categories/${id}`, { withCredentials: true });
+  }
+
   // Tasks
   getTasks(filters?: {
     status?: string;
@@ -140,6 +148,10 @@ export class TaskService {
 
   deleteSubtask(taskId: string, subtaskId: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/tasks/${taskId}/subtasks/${subtaskId}`, { withCredentials: true });
+  }
+
+  updateSubtask(taskId: string, subtaskId: string, title: string): Observable<Subtask> {
+    return this.http.put<Subtask>(`${this.baseUrl}/tasks/${taskId}/subtasks/${subtaskId}`, { title }, { withCredentials: true });
   }
 
   // Dashboard

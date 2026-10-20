@@ -12,7 +12,7 @@ import { AuthService } from '../../core/auth/auth.service';
       <div class="toolbar">
         <div>
           <span class="eyebrow">APPLICATION & SYSTEM CONFIGURATION</span>
-          <h2 class="display-md">Settings & Operator Profile</h2>
+          <h2 class="display-md">Settings & User Profile</h2>
         </div>
       </div>
 
@@ -24,7 +24,7 @@ import { AuthService } from '../../core/auth/auth.service';
           [class.active]="activeTab() === 'PROFILE'"
           (click)="activeTab.set('PROFILE')"
         >
-          OPERATOR PROFILE
+          USER PROFILE
         </button>
         <button
           type="button"
@@ -51,7 +51,7 @@ import { AuthService } from '../../core/auth/auth.service';
         </div>
       }
 
-      <!-- Tab 1: Operator Profile -->
+      <!-- Tab 1: User Profile -->
       @if (activeTab() === 'PROFILE') {
         <div class="settings-grid">
           <!-- Profile Details -->
@@ -93,9 +93,9 @@ import { AuthService } from '../../core/auth/auth.service';
           <!-- Danger Zone: Account Deletion -->
           <div class="card settings-card danger-card">
             <span class="eyebrow text-error">DANGER ZONE</span>
-            <h4 class="font-serif text-lg mt-1">Delete Operator Account</h4>
+            <h4 class="font-sans text-lg mt-1 font-bold">Delete Account</h4>
             <p class="text-secondary text-xs mt-1">
-              Permanently purges your account, all associated tasks, roadmaps, notes, and habits. This action cannot be reversed.
+              Permanently removes your account, all associated tasks, roadmaps, notes, and habits. This action cannot be reversed.
             </p>
             <div class="mt-3">
               @if (!showDeleteConfirm) {

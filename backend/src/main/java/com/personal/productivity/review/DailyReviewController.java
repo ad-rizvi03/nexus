@@ -48,4 +48,11 @@ public class DailyReviewController {
         User user = authService.getCurrentAuthenticatedUser();
         return ResponseEntity.ok(dailyReviewService.getReviewHistory(user.getId()));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteReview(@PathVariable java.util.UUID id) {
+        User user = authService.getCurrentAuthenticatedUser();
+        dailyReviewService.deleteDailyReview(user.getId(), id);
+        return ResponseEntity.noContent().build();
+    }
 }

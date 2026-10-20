@@ -12,6 +12,7 @@ import java.util.UUID;
 public interface PracticeLogRepository extends JpaRepository<PracticeLog, UUID> {
     List<PracticeLog> findAllByUserIdOrderByLogDateDescCreatedAtDesc(UUID userId);
     List<PracticeLog> findAllByUserIdAndRoadmapIdOrderByLogDateDescCreatedAtDesc(UUID userId, UUID roadmapId);
+    java.util.Optional<PracticeLog> findByIdAndUserId(UUID id, UUID userId);
 
     @Query("SELECT COALESCE(SUM(p.minutesSpent), 0) FROM PracticeLog p WHERE p.user.id = :userId AND p.roadmapId = :roadmapId")
     long sumMinutesByRoadmapId(@Param("userId") UUID userId, @Param("roadmapId") UUID roadmapId);

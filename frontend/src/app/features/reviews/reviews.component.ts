@@ -10,6 +10,8 @@ import {
   DailyReviewSubmission
 } from '../../core/services/review.service';
 import { TaskItem } from '../../core/services/task.service';
+import { ConfirmDialogService } from '../../shared/confirm-dialog/confirm-dialog.service';
+import { ToastService } from '../../shared/toast/toast.service';
 
 interface TaskTriageState {
   action: TaskTriageAction;
@@ -580,63 +582,49 @@ interface TaskTriageState {
         </div>
       }
 
-      <!-- Historical Reviews Archive Modal -->
+
+
+      <!-- Historical Archive Modal -->
       @if (showHistoryModal()) {
         <div class="modal-backdrop" (click)="showHistoryModal.set(false)">
-          <div class="modal-window card" (click)="$event.stopPropagation()">
+          <div class="modal-card" (click)="$event.stopPropagation()">
             <div class="modal-header">
-              <div>
-                <span class="eyebrow font-mono">HISTORICAL ARCHIVE</span>
-                <h3 class="font-serif text-lg">Daily Reviews History Log</h3>
-              </div>
-              <button type="button" class="close-btn" (click)="showHistoryModal.set(false)">✕</button>
+              <span class="eyebrow font-mono text-gold">RETROSPECTIVE ARCHIVE</span>
+              <button type="button" class="close-btn font-mono" (click)="showHistoryModal.set(false)">✕</button>
             </div>
 
-            <div class="history-list font-mono">
-              @if (history().length === 0) {
-                <div class="empty-state">
-                  <span>No finalized daily reviews recorded yet.</span>
-                </div>
-              } @else {
-                <table class="history-table">
-                  <thead>
-                    <tr>
-                      <th>DATE</th>
-                      <th>COMPLETED</th>
-                      <th>UNFINISHED</th>
-                      <th>FOCUS TIME</th>
-                      <th>LEARNING</th>
-                      <th>STATUS</th>
-                      <th>ACTION</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (item of history(); track item.id) {
-                      <tr>
-                        <td class="font-bold">{{ item.reviewDate }}</td>
-                        <td class="text-success">{{ item.completedTaskCount }}</td>
-                        <td [class.text-amber]="item.unfinishedTaskCount > 0">{{ item.unfinishedTaskCount }}</td>
-                        <td class="text-gold">{{ formatMinutes(item.totalTimeTrackedMinutes) }}</td>
-                        <td class="text-blue">{{ item.learningCompletedCount }}</td>
-                        <td>
-                          <span class="status-badge" [class.done]="item.status === 'COMPLETED'">
-                            {{ item.status }}
-                          </span>
-                        </td>
-                        <td>
-                          <button
-                            type="button"
-                            class="btn btn-secondary btn-xs"
-                            (click)="viewHistoricalDate(item.reviewDate)"
-                          >
-                            OPEN
-                          </button>
-                        </td>
-                      </tr>
+            <div class="history-list">
+              @for (rev of history(); track rev.id) {
+                <div class="history-item">
+                  <div class="history-left" (click)="viewHistoricalDate(rev.reviewDate)">
+                    <div class="history-date-row font-mono">
+                      <span class="history-date text-gold">📅 {{ rev.reviewDate }}</span>
+                      <span class="badge-status font-mono">{{ rev.status }}</span>
+                    </div>
+                    <div class="history-metrics font-mono text-muted text-xs mt-1">
+                      {{ rev.completedTaskCount }} completed · {{ rev.unfinishedTaskCount }} unfinished · {{ rev.totalTimeTrackedMinutes }}m focus · {{ rev.habitsCompletedCount }} habits
+                    </div>
+                    @if (rev.reflectionNotes) {
+                      <p class="history-notes font-sans text-secondary text-xs mt-1">{{ rev.reflectionNotes }}</p>
                     }
-                  </tbody>
-                </table>
+                  </div>
+                  <div class="history-actions font-mono">
+                    <button type="button" class="btn btn-secondary btn-xs" (click)="viewHistoricalDate(rev.reviewDate)">
+                      OPEN
+                    </button>
+                    <button type="button" class="btn btn-error btn-xs" (click)="deleteReview(rev.id)">
+                      DELETE
+                    </button>
+                  </div>
+                </div>
               }
+              @if (history().length === 0) {
+                <div class="empty-state font-mono">No historical review logs recorded yet.</div>
+              }
+            </div>
+
+            <div class="modal-actions mt-3">
+              <button type="button" class="btn btn-ghost btn-sm font-mono" (click)="showHistoryModal.set(false)">CLOSE</button>
             </div>
           </div>
         </div>
@@ -1257,12 +1245,57 @@ interface TaskTriageState {
     .ml-2 { margin-left: 8px; }
     .mt-2 { margin-top: 8px; }
     .mt-3 { margin-top: 12px; }
-    .mb-4 { margin-bottom: 16px; }
     .btn-xs { padding: 4px 8px; font-size: 0.65rem; }
+
+    /* History Archive Modal */
+    .history-list {
+      max-height: 480px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .history-item {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      transition: border-color var(--transition-fast);
+      &:hover { border-color: var(--accent-gold); }
+      .history-left {
+        flex: 1;
+        cursor: pointer;
+      }
+      .history-date-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        .badge-status {
+          font-size: 0.65rem;
+          padding: 2px 6px;
+          border-radius: 4px;
+          background: rgba(120, 185, 154, 0.15);
+          color: var(--status-success);
+        }
+      }
+      .history-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+    }
   `]
 })
 export class ReviewsComponent implements OnInit {
   private readonly reviewService = inject(ReviewService);
+  private readonly confirmDialog = inject(ConfirmDialogService);
+  private readonly toastService = inject(ToastService);
 
   readonly selectedDate = signal<string>(new Date().toISOString().split('T')[0]);
   readonly workspace = signal<DailyReviewWorkspace | null>(null);
@@ -1510,6 +1543,30 @@ export class ReviewsComponent implements OnInit {
     this.showHistoryModal.set(false);
     this.selectedDate.set(dateStr);
     this.loadWorkspace(dateStr);
+  }
+
+  async deleteReview(reviewId: string) {
+    const ok = await this.confirmDialog.confirm({
+      title: 'DELETE RETROSPECTIVE',
+      message: 'Are you sure you want to permanently delete this daily retrospective log?',
+      isDestructive: true,
+      confirmText: 'DELETE LOG'
+    });
+    if (!ok) return;
+
+    this.reviewService.deleteReview(reviewId).subscribe({
+      next: () => {
+        this.toastService.success('Retrospective log permanently removed.', 'LOG DELETED');
+        this.loadHistory();
+        if (this.workspace()?.review?.id === reviewId) {
+          this.loadWorkspace(this.selectedDate());
+        }
+      },
+      error: (err) => {
+        console.error('Failed to delete review record:', err);
+        this.toastService.error('Failed to delete review record.');
+      }
+    });
   }
 
   formatMinutes(mins: number): string {

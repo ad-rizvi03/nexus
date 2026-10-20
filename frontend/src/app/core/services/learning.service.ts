@@ -181,6 +181,10 @@ export class LearningService {
     return this.http.patch<RevisionSession>(`${this.baseUrl}/revisions/${revisionId}/complete`, null, { withCredentials: true });
   }
 
+  deleteRevision(revisionId: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/revisions/${revisionId}`, { withCredentials: true });
+  }
+
   // Practice Logs
   getPracticeLogs(roadmapId?: string): Observable<PracticeLog[]> {
     let params = new HttpParams();
@@ -190,5 +194,9 @@ export class LearningService {
 
   createPracticeLog(req: PracticeLogRequest): Observable<PracticeLog> {
     return this.http.post<PracticeLog>(`${this.baseUrl}/practice-logs`, req, { withCredentials: true });
+  }
+
+  deletePracticeLog(logId: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/practice-logs/${logId}`, { withCredentials: true });
   }
 }

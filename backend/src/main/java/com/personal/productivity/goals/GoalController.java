@@ -72,6 +72,15 @@ public class GoalController {
         return ResponseEntity.status(HttpStatus.CREATED).body(goalService.addMilestone(user.getId(), goalId, request));
     }
 
+    @PutMapping("/{goalId}/milestones/{milestoneId}")
+    public ResponseEntity<GoalDto.Response> updateMilestone(
+            @PathVariable UUID goalId,
+            @PathVariable UUID milestoneId,
+            @Valid @RequestBody GoalMilestoneDto.Request request) {
+        User user = authService.getCurrentAuthenticatedUser();
+        return ResponseEntity.ok(goalService.updateMilestone(user.getId(), goalId, milestoneId, request));
+    }
+
     @DeleteMapping("/{goalId}/milestones/{milestoneId}")
     public ResponseEntity<GoalDto.Response> deleteMilestone(
             @PathVariable UUID goalId,

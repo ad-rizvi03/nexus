@@ -93,4 +93,8 @@ export class ReviewService {
   getHistory(): Observable<DailyReview[]> {
     return this.http.get<DailyReview[]>(`${this.baseUrl}/history`);
   }
+
+  deleteReview(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  }
 }

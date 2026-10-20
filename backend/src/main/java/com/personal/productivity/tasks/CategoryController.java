@@ -34,4 +34,19 @@ public class CategoryController {
         User user = authService.getCurrentAuthenticatedUser();
         return new ResponseEntity<>(categoryService.createCategory(user, request), HttpStatus.CREATED);
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<CategoryDto> updateCategory(
+            @PathVariable java.util.UUID id,
+            @Valid @RequestBody CategoryRequest request) {
+        User user = authService.getCurrentAuthenticatedUser();
+        return ResponseEntity.ok(categoryService.updateCategory(user, id, request));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteCategory(@PathVariable java.util.UUID id) {
+        User user = authService.getCurrentAuthenticatedUser();
+        categoryService.deleteCategory(user, id);
+        return ResponseEntity.noContent().build();
+    }
 }

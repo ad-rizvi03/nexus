@@ -171,6 +171,22 @@ public class TaskService {
     }
 
     @Transactional
+    public SubtaskDto updateSubtask(User user, UUID taskId, UUID subtaskId, SubtaskRequest request) {
+        getTaskEntity(user, taskId);
+        Subtask subtask = subtaskRepository.findByIdAndTaskId(subtaskId, taskId)
+                .orElseThrow(() -> new ResourceNotFoundException("Subtask not found"));
+        subtask.setTitle(request.title().trim());
+        if (request.estimatedDurationMinutes() != null) {
+            subtask.setEstimatedDurationMinutes(request.estimatedDurationMinutes());
+        }
+        if (request.sortOrder() != null) {
+            subtask.setSortOrder(request.sortOrder());
+        }
+        subtask = subtaskRepository.save(subtask);
+        return SubtaskDto.fromEntity(subtask);
+    }
+
+    @Transactional
     public void deleteSubtask(User user, UUID taskId, UUID subtaskId) {
         getTaskEntity(user, taskId);
         Subtask subtask = subtaskRepository.findByIdAndTaskId(subtaskId, taskId)

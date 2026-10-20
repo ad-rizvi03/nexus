@@ -14,11 +14,18 @@ import {
   TopicRequest,
   PracticeLogRequest
 } from '../../core/services/learning.service';
+import {
+  AiCopilotModalComponent,
+  YouTubeRecommendation,
+  SuggestedModule
+} from '../../shared/ai-copilot-modal/ai-copilot-modal.component';
+import { ConfirmDialogService } from '../../shared/confirm-dialog/confirm-dialog.service';
+import { ToastService } from '../../shared/toast/toast.service';
 
 @Component({
   selector: 'app-learning',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AiCopilotModalComponent],
   template: `
     <div class="learning-viewport">
       <!-- Toolbar -->
@@ -28,6 +35,9 @@ import {
           <h2 class="display-md">Learning Roadmaps & Topic Trees</h2>
         </div>
         <div class="toolbar-actions">
+          <button type="button" class="btn btn-secondary btn-sm font-mono ai-badge-btn" (click)="openAiCurriculumAdvisor()">
+            ✨ AI ADVISOR & VIDEOS
+          </button>
           <button type="button" class="btn btn-ghost btn-sm font-mono" (click)="openPracticeModal()">
             + LOG PRACTICE
           </button>
@@ -120,9 +130,17 @@ import {
                   <span class="panel-tag font-mono">TOPIC TREE</span>
                   <h3 class="panel-heading">{{ curRoadmap.skillName }} Curriculum</h3>
                 </div>
-                <button type="button" class="btn btn-primary btn-sm font-mono" (click)="openModuleModal(curRoadmap.id)">
-                  + ADD MODULE
-                </button>
+                <div class="header-action-btns">
+                  <button type="button" class="btn btn-ghost btn-xs font-mono" (click)="openEditRoadmapModal(curRoadmap)">
+                    EDIT ROADMAP
+                  </button>
+                  <button type="button" class="btn btn-error btn-xs font-mono" (click)="deleteRoadmap(curRoadmap.id)">
+                    DELETE ROADMAP
+                  </button>
+                  <button type="button" class="btn btn-primary btn-xs font-mono" (click)="openModuleModal(curRoadmap.id)">
+                    + ADD MODULE
+                  </button>
+                </div>
               </div>
 
               <div class="modules-accordion">
@@ -142,6 +160,12 @@ import {
                         <span class="badge font-mono" [ngClass]="getModuleStatusBadgeClass(module.status)">
                           {{ module.status }}
                         </span>
+                        <button type="button" class="btn btn-ghost btn-xs font-mono" (click)="openEditModuleModal(module)">
+                          EDIT
+                        </button>
+                        <button type="button" class="btn btn-error btn-xs font-mono" (click)="deleteModule(module.id)">
+                          DEL
+                        </button>
                         <button type="button" class="btn btn-ghost btn-xs font-mono" (click)="openTopicModal(module.id)">
                           + TOPIC
                         </button>
@@ -171,6 +195,22 @@ import {
                               <option value="COMPLETED">COMPLETED</option>
                               <option value="NEEDS_REVISION">NEEDS REVISION</option>
                             </select>
+                            <button
+                              type="button"
+                              class="btn btn-ghost btn-xs font-mono"
+                              title="Edit Topic"
+                              (click)="openEditTopicModal(module.id, topic)"
+                            >
+                              EDIT
+                            </button>
+                            <button
+                              type="button"
+                              class="btn btn-error btn-xs font-mono"
+                              title="Delete Topic"
+                              (click)="deleteTopic(topic.id)"
+                            >
+                              ✕
+                            </button>
                             <button
                               type="button"
                               class="btn btn-ghost btn-xs font-mono"
@@ -223,6 +263,9 @@ import {
                       <span class="text-warning">· DUE {{ rev.scheduledDate }}</span>
                     </span>
                   </div>
+                  <button type="button" class="rev-del-btn font-mono" (click)="deleteRevision(rev.id)" title="Cancel/Delete Revision">
+                    ✕
+                  </button>
                 </div>
               }
               @if (revisions().length === 0) {
@@ -248,6 +291,9 @@ import {
                   <div class="practice-top">
                     <span class="log-date">{{ log.logDate }}</span>
                     <span class="log-badge">{{ log.minutesSpent }} min</span>
+                    <button type="button" class="log-del-btn font-mono" (click)="deletePracticeLog(log.id)" title="Delete Log">
+                      ✕
+                    </button>
                   </div>
                   @if (log.topicTitle || log.roadmapSkillName) {
                     <span class="log-topic-title">{{ log.topicTitle || log.roadmapSkillName }}</span>
@@ -273,8 +319,13 @@ import {
         <div class="modal-backdrop" (click)="showRoadmapModal = false">
           <div class="modal-card" (click)="$event.stopPropagation()">
             <div class="modal-header">
-              <span class="eyebrow">NEW LEARNING ROADMAP</span>
-              <button type="button" class="close-btn font-mono" (click)="showRoadmapModal = false">✕</button>
+              <span class="eyebrow">{{ editingRoadmapId ? 'EDIT LEARNING ROADMAP' : 'NEW LEARNING ROADMAP' }}</span>
+              <div class="header-modal-actions">
+                <button type="button" class="btn btn-secondary btn-xs font-mono ai-badge-btn" (click)="openAiForRoadmap()">
+                  ✨ AI CURRICULUM & VIDEOS
+                </button>
+                <button type="button" class="close-btn font-mono" (click)="showRoadmapModal = false">✕</button>
+              </div>
             </div>
             <form (ngSubmit)="saveRoadmap()">
               <div class="form-group">
@@ -303,7 +354,10 @@ import {
 
               <div class="form-row">
                 <div class="form-group flex-1">
-                  <label class="form-label font-mono">WEEKLY TARGET (HOURS)</label>
+                  <div class="label-with-ai-link">
+                    <label class="form-label font-mono">WEEKLY TARGET (HOURS)</label>
+                    <button type="button" class="ai-inline-btn font-mono" (click)="openAiForRoadmap()">✨ AI</button>
+                  </div>
                   <input
                     type="number"
                     [(ngModel)]="roadmapForm.weeklyTargetHours"
@@ -326,7 +380,9 @@ import {
 
               <div class="modal-actions">
                 <button type="button" class="btn btn-ghost btn-sm font-mono" (click)="showRoadmapModal = false">CANCEL</button>
-                <button type="submit" class="btn btn-primary btn-sm font-mono" [disabled]="!roadmapForm.skillName.trim()">CREATE ROADMAP</button>
+                <button type="submit" class="btn btn-primary btn-sm font-mono" [disabled]="!roadmapForm.skillName.trim()">
+                  {{ editingRoadmapId ? 'UPDATE ROADMAP' : 'CREATE ROADMAP' }}
+                </button>
               </div>
             </form>
           </div>
@@ -338,7 +394,7 @@ import {
         <div class="modal-backdrop" (click)="showModuleModal = false">
           <div class="modal-card" (click)="$event.stopPropagation()">
             <div class="modal-header">
-              <span class="eyebrow">ADD CURRICULUM MODULE</span>
+              <span class="eyebrow">{{ editingModuleId ? 'EDIT CURRICULUM MODULE' : 'ADD CURRICULUM MODULE' }}</span>
               <button type="button" class="close-btn font-mono" (click)="showModuleModal = false">✕</button>
             </div>
             <form (ngSubmit)="saveModule()">
@@ -368,7 +424,9 @@ import {
 
               <div class="modal-actions">
                 <button type="button" class="btn btn-ghost btn-sm font-mono" (click)="showModuleModal = false">CANCEL</button>
-                <button type="submit" class="btn btn-primary btn-sm font-mono" [disabled]="!moduleForm.title.trim()">ADD MODULE</button>
+                <button type="submit" class="btn btn-primary btn-sm font-mono" [disabled]="!moduleForm.title.trim()">
+                  {{ editingModuleId ? 'UPDATE MODULE' : 'ADD MODULE' }}
+                </button>
               </div>
             </form>
           </div>
@@ -380,7 +438,7 @@ import {
         <div class="modal-backdrop" (click)="showTopicModal = false">
           <div class="modal-card" (click)="$event.stopPropagation()">
             <div class="modal-header">
-              <span class="eyebrow">ADD TOPIC UNIT</span>
+              <span class="eyebrow">{{ editingTopicId ? 'EDIT TOPIC UNIT' : 'ADD TOPIC UNIT' }}</span>
               <button type="button" class="close-btn font-mono" (click)="showTopicModal = false">✕</button>
             </div>
             <form (ngSubmit)="saveTopic()">
@@ -398,7 +456,10 @@ import {
               </div>
 
               <div class="form-group">
-                <label class="form-label font-mono">ESTIMATED DURATION (MINUTES)</label>
+                <div class="label-with-ai-link">
+                  <label class="form-label font-mono">ESTIMATED DURATION (MINUTES)</label>
+                  <button type="button" class="ai-inline-btn font-mono" (click)="openAiForTopic()">✨ AI Estimate</button>
+                </div>
                 <input
                   type="number"
                   [(ngModel)]="topicForm.estimatedMinutes"
@@ -411,7 +472,9 @@ import {
 
               <div class="modal-actions">
                 <button type="button" class="btn btn-ghost btn-sm font-mono" (click)="showTopicModal = false">CANCEL</button>
-                <button type="submit" class="btn btn-primary btn-sm font-mono" [disabled]="!topicForm.title.trim()">ADD TOPIC</button>
+                <button type="submit" class="btn btn-primary btn-sm font-mono" [disabled]="!topicForm.title.trim()">
+                  {{ editingTopicId ? 'UPDATE TOPIC' : 'ADD TOPIC' }}
+                </button>
               </div>
             </form>
           </div>
@@ -502,6 +565,19 @@ import {
             </form>
           </div>
         </div>
+      }
+
+      <!-- AI Copilot Modal -->
+      @if (showAiModal()) {
+        <app-ai-copilot-modal
+          [contextType]="aiContextType()"
+          [initialSubject]="aiInitialSubject()"
+          (closeModal)="showAiModal.set(false)"
+          (applyStudyHours)="onAiApplyStudyHours($event)"
+          (applyDuration)="onAiApplyTopicDuration($event)"
+          (applyModules)="onAiApplyModules($event)"
+          (bookmarkVideo)="onAiBookmarkVideo($event)"
+        ></app-ai-copilot-modal>
       }
     </div>
   `,
@@ -830,20 +906,62 @@ import {
       .flex-1 { flex: 1; }
       .modal-actions {
         display: flex;
-        justify-content: flex-end;
+        justify-content: space-end;
         gap: 10px;
         margin-top: 20px;
+      }
+    }
+    .ai-badge-btn {
+      background: linear-gradient(135deg, rgba(198, 165, 106, 0.15) 0%, rgba(229, 201, 143, 0.25) 100%);
+      border: 1px solid rgba(198, 165, 106, 0.4);
+      color: #E5C98F;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      transition: all 0.2s ease;
+      &:hover {
+        background: linear-gradient(135deg, rgba(198, 165, 106, 0.25) 0%, rgba(229, 201, 143, 0.35) 100%);
+        border-color: #C6A56A;
+        box-shadow: 0 0 12px rgba(198, 165, 106, 0.25);
+      }
+    }
+    .header-modal-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .label-with-ai-link {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+      .ai-inline-btn {
+        background: none;
+        border: none;
+        color: var(--accent-gold);
+        font-size: 0.65rem;
+        cursor: pointer;
+        padding: 0 4px;
+        letter-spacing: 0.05em;
+        &:hover {
+          text-decoration: underline;
+        }
       }
     }
   `]
 })
 export class LearningComponent implements OnInit {
   private readonly learningService = inject(LearningService);
+  private readonly confirmDialog = inject(ConfirmDialogService);
+  private readonly toastService = inject(ToastService);
 
   readonly roadmaps = signal<Roadmap[]>([]);
   readonly revisions = signal<RevisionSession[]>([]);
   readonly practiceLogs = signal<PracticeLog[]>([]);
   readonly selectedRoadmap = signal<Roadmap | null>(null);
+
+  showAiModal = signal(false);
+  aiInitialSubject = signal('');
+  aiContextType = signal<'TASK' | 'ROADMAP' | 'GENERAL'>('ROADMAP');
 
   readonly totalTopicsCount = computed(() =>
     this.roadmaps().reduce((acc, r) => acc + (r.totalTopics || 0), 0)
@@ -869,6 +987,10 @@ export class LearningComponent implements OnInit {
   showModuleModal = false;
   showTopicModal = false;
   showPracticeModal = false;
+
+  editingRoadmapId: string | null = null;
+  editingModuleId: string | null = null;
+  editingTopicId: string | null = null;
 
   activeRoadmapIdForModule = '';
   activeModuleIdForTopic = '';
@@ -956,8 +1078,9 @@ export class LearningComponent implements OnInit {
     });
   }
 
-  // Modals
+  // Modals & Actions
   openRoadmapModal() {
+    this.editingRoadmapId = null;
     this.roadmapForm = {
       skillName: '',
       objective: '',
@@ -967,49 +1090,193 @@ export class LearningComponent implements OnInit {
     this.showRoadmapModal = true;
   }
 
-  saveRoadmap() {
-    if (!this.roadmapForm.skillName.trim()) return;
-    this.learningService.createRoadmap(this.roadmapForm).subscribe({
-      next: (created) => {
-        this.showRoadmapModal = false;
+  openEditRoadmapModal(roadmap: Roadmap) {
+    this.editingRoadmapId = roadmap.id;
+    this.roadmapForm = {
+      skillName: roadmap.skillName,
+      objective: roadmap.objective || '',
+      weeklyTargetHours: roadmap.weeklyTargetHours,
+      targetCompletionDate: roadmap.targetCompletionDate || ''
+    };
+    this.showRoadmapModal = true;
+  }
+
+  async deleteRoadmap(roadmapId: string) {
+    const ok = await this.confirmDialog.confirm({
+      title: 'DELETE ROADMAP',
+      message: 'Are you sure you want to delete this learning roadmap and all its modules and topics? This action cannot be undone.',
+      isDestructive: true,
+      confirmText: 'DELETE ROADMAP'
+    });
+    if (!ok) return;
+
+    this.learningService.deleteRoadmap(roadmapId).subscribe({
+      next: () => {
+        if (this.selectedRoadmap()?.id === roadmapId) {
+          this.selectedRoadmap.set(null);
+        }
         this.loadAllData();
-        this.selectedRoadmap.set(created);
+        this.toastService.success('Roadmap permanently deleted.', 'ROADMAP DELETED');
       },
-      error: (err) => console.error('Failed to create roadmap', err)
+      error: (err) => {
+        console.error('Failed to delete roadmap', err);
+        this.toastService.error('Failed to delete roadmap.');
+      }
     });
   }
 
+  saveRoadmap() {
+    if (!this.roadmapForm.skillName.trim()) return;
+    if (this.editingRoadmapId) {
+      this.learningService.updateRoadmap(this.editingRoadmapId, this.roadmapForm).subscribe({
+        next: (updated) => {
+          this.showRoadmapModal = false;
+          this.loadAllData();
+          this.selectedRoadmap.set(updated);
+        },
+        error: (err) => console.error('Failed to update roadmap', err)
+      });
+    } else {
+      this.learningService.createRoadmap(this.roadmapForm).subscribe({
+        next: (created) => {
+          this.showRoadmapModal = false;
+          this.loadAllData();
+          this.selectedRoadmap.set(created);
+        },
+        error: (err) => console.error('Failed to create roadmap', err)
+      });
+    }
+  }
+
   openModuleModal(roadmapId: string) {
+    this.editingModuleId = null;
     this.activeRoadmapIdForModule = roadmapId;
     this.moduleForm = { title: '', description: '' };
     this.showModuleModal = true;
   }
 
-  saveModule() {
-    if (!this.moduleForm.title.trim()) return;
-    this.learningService.addModule(this.activeRoadmapIdForModule, this.moduleForm).subscribe({
+  openEditModuleModal(mod: Module) {
+    this.editingModuleId = mod.id;
+    this.moduleForm = { title: mod.title, description: mod.description || '', sortOrder: mod.sortOrder };
+    this.showModuleModal = true;
+  }
+
+  async deleteModule(moduleId: string) {
+    const ok = await this.confirmDialog.confirm({
+      title: 'DELETE MODULE',
+      message: 'Are you sure you want to delete this module and all nested topics?',
+      isDestructive: true,
+      confirmText: 'DELETE MODULE'
+    });
+    if (!ok) return;
+
+    this.learningService.deleteModule(moduleId).subscribe({
       next: () => {
-        this.showModuleModal = false;
         this.loadAllData();
+        this.toastService.success('Module removed successfully.', 'MODULE DELETED');
       },
-      error: (err) => console.error('Failed to add module', err)
+      error: (err) => {
+        console.error('Failed to delete module', err);
+        this.toastService.error('Failed to delete module.');
+      }
     });
   }
 
+  saveModule() {
+    if (!this.moduleForm.title.trim()) return;
+    if (this.editingModuleId) {
+      this.learningService.updateModule(this.editingModuleId, this.moduleForm).subscribe({
+        next: () => {
+          this.showModuleModal = false;
+          this.loadAllData();
+        },
+        error: (err) => console.error('Failed to update module', err)
+      });
+    } else {
+      this.learningService.addModule(this.activeRoadmapIdForModule, this.moduleForm).subscribe({
+        next: () => {
+          this.showModuleModal = false;
+          this.loadAllData();
+        },
+        error: (err) => console.error('Failed to add module', err)
+      });
+    }
+  }
+
   openTopicModal(moduleId: string) {
+    this.editingTopicId = null;
     this.activeModuleIdForTopic = moduleId;
     this.topicForm = { title: '', estimatedMinutes: 45 };
     this.showTopicModal = true;
   }
 
+  openEditTopicModal(moduleId: string, topic: Topic) {
+    this.activeModuleIdForTopic = moduleId;
+    this.editingTopicId = topic.id;
+    this.topicForm = { title: topic.title, estimatedMinutes: topic.estimatedMinutes || 45, sortOrder: topic.sortOrder };
+    this.showTopicModal = true;
+  }
+
+  async deleteTopic(topicId: string) {
+    const ok = await this.confirmDialog.confirm({
+      title: 'DELETE TOPIC',
+      message: 'Are you sure you want to delete this topic?',
+      isDestructive: true,
+      confirmText: 'DELETE TOPIC'
+    });
+    if (!ok) return;
+
+    this.learningService.deleteTopic(topicId).subscribe({
+      next: () => {
+        this.loadAllData();
+        this.toastService.success('Topic removed.', 'TOPIC DELETED');
+      },
+      error: (err) => {
+        console.error('Failed to delete topic', err);
+        this.toastService.error('Failed to delete topic.');
+      }
+    });
+  }
+
   saveTopic() {
     if (!this.topicForm.title.trim()) return;
-    this.learningService.addTopic(this.activeModuleIdForTopic, this.topicForm).subscribe({
+    if (this.editingTopicId) {
+      this.learningService.updateTopic(this.editingTopicId, this.topicForm).subscribe({
+        next: () => {
+          this.showTopicModal = false;
+          this.loadAllData();
+        },
+        error: (err) => console.error('Failed to update topic', err)
+      });
+    } else {
+      this.learningService.addTopic(this.activeModuleIdForTopic, this.topicForm).subscribe({
+        next: () => {
+          this.showTopicModal = false;
+          this.loadAllData();
+        },
+        error: (err) => console.error('Failed to add topic', err)
+      });
+    }
+  }
+
+  async deleteRevision(revId: string) {
+    const ok = await this.confirmDialog.confirm({
+      title: 'CANCEL REVISION',
+      message: 'Cancel and remove this scheduled spaced-repetition revision session?',
+      isDestructive: true,
+      confirmText: 'CANCEL SESSION'
+    });
+    if (!ok) return;
+
+    this.learningService.deleteRevision(revId).subscribe({
       next: () => {
-        this.showTopicModal = false;
         this.loadAllData();
+        this.toastService.success('Revision session removed.', 'SESSION CANCELLED');
       },
-      error: (err) => console.error('Failed to add topic', err)
+      error: (err) => {
+        console.error('Failed to delete revision', err);
+        this.toastService.error('Failed to cancel revision session.');
+      }
     });
   }
 
@@ -1030,8 +1297,33 @@ export class LearningComponent implements OnInit {
       next: () => {
         this.showPracticeModal = false;
         this.loadAllData();
+        this.toastService.success('Practice session recorded.', 'LOG SAVED');
       },
-      error: (err) => console.error('Failed to save practice log', err)
+      error: (err) => {
+        console.error('Failed to save practice log', err);
+        this.toastService.error('Failed to save practice log.');
+      }
+    });
+  }
+
+  async deletePracticeLog(logId: string) {
+    const ok = await this.confirmDialog.confirm({
+      title: 'DELETE PRACTICE RECORD',
+      message: 'Delete this practice log record?',
+      isDestructive: true,
+      confirmText: 'DELETE RECORD'
+    });
+    if (!ok) return;
+
+    this.learningService.deletePracticeLog(logId).subscribe({
+      next: () => {
+        this.loadAllData();
+        this.toastService.success('Practice record deleted.', 'RECORD DELETED');
+      },
+      error: (err) => {
+        console.error('Failed to delete practice log', err);
+        this.toastService.error('Failed to delete practice log.');
+      }
     });
   }
 
@@ -1050,5 +1342,68 @@ export class LearningComponent implements OnInit {
       case 'IN_PROGRESS': return 'badge-gold';
       default: return 'badge-neutral';
     }
+  }
+
+  openAiCurriculumAdvisor() {
+    this.aiContextType.set('ROADMAP');
+    const selected = this.selectedRoadmap();
+    this.aiInitialSubject.set(selected ? selected.skillName : (this.roadmapForm.skillName || 'Full Stack Software Engineering'));
+    this.showAiModal.set(true);
+  }
+
+  openAiForRoadmap() {
+    this.aiContextType.set('ROADMAP');
+    this.aiInitialSubject.set(this.roadmapForm.skillName || 'Engineering Mastery Track');
+    this.showAiModal.set(true);
+  }
+
+  openAiForTopic() {
+    this.aiContextType.set('TASK');
+    this.aiInitialSubject.set(this.topicForm.title || 'Technical Concept');
+    this.showAiModal.set(true);
+  }
+
+  onAiApplyStudyHours(hours: number) {
+    this.roadmapForm.weeklyTargetHours = Math.max(2, Math.round((hours / 4) * 10) / 10);
+  }
+
+  onAiApplyTopicDuration(minutes: number) {
+    this.topicForm.estimatedMinutes = minutes;
+  }
+
+  onAiApplyModules(modules: SuggestedModule[]) {
+    const roadmap = this.selectedRoadmap();
+    if (!roadmap) {
+      const summary = modules.map(m => `• ${m.title} (~${m.estimatedHours}h): ${m.topics.join(', ')}`).join('\n');
+      this.roadmapForm.objective = this.roadmapForm.objective
+        ? `${this.roadmapForm.objective}\n\nCurriculum Outline:\n${summary}`
+        : `Curriculum Outline:\n${summary}`;
+      return;
+    }
+
+    modules.forEach((mod: SuggestedModule, modIdx: number) => {
+      this.learningService.addModule(roadmap.id, {
+        title: mod.title,
+        description: mod.description,
+        sortOrder: modIdx + 1
+      }).subscribe({
+        next: (createdMod: Module) => {
+          mod.topics.forEach((topicTitle: string, topicIdx: number) => {
+            this.learningService.addTopic(createdMod.id, {
+              title: topicTitle,
+              estimatedMinutes: Math.round((mod.estimatedHours / Math.max(1, mod.topics.length)) * 60) || 60,
+              sortOrder: topicIdx + 1
+            }).subscribe({
+              next: () => this.loadAllData()
+            });
+          });
+        }
+      });
+    });
+  }
+
+  onAiBookmarkVideo(video: YouTubeRecommendation) {
+    const note = `\n\n📌 Recommended Tutorial: [${video.title}](${video.url}) (${video.channel} - ${video.duration})`;
+    this.roadmapForm.objective = (this.roadmapForm.objective || '') + note;
   }
 }
